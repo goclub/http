@@ -1,0 +1,12 @@
+{
+  "name": "goclub",
+  "version": "0.0.1",
+  "description": "golang club",
+  "main": "index.js",
+  "keywords": [
+    "go",
+    "club"
+  ],
+  "author": "nimoc",
+  "license": "ISC"
+}
