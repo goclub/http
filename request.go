@@ -24,7 +24,7 @@ type RequestFormData interface {
 type RequestHeader interface {
 	Header() (http.Header, error)
 }
-type Request struct {
+type SendRequest struct {
 	Query RequestQuery
 	FormUrlencoded RequestFormUrlencoded
 	FormData RequestFormData
@@ -33,7 +33,7 @@ type Request struct {
 	Debug bool
 }
 
-func (request Request) HttpRequest(ctx context.Context, method Method, url string) (*http.Request, error) {
+func (request SendRequest) HttpRequest(ctx context.Context, method Method, url string) (*http.Request, error) {
 	var bodyReader io.Reader
 	// json
 	if request.JSON != nil {

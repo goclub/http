@@ -23,6 +23,9 @@ func NewClient (core *http.Client) *Client {
 // 用于提醒开发人员每次调用完 Do 之后需要根据不同的状态码进行相应的处理措施
 // xhttp.Client{}.Do() 的实现非常简单，有兴趣的可以直接查看源码帮助理解
 func (client *Client) Do(request *http.Request) (resp *http.Response, bodyClose func() error, statusCode int, err error) {
+	if client.Core == nil {
+		client.Core = http.DefaultClient
+	}
 	bodyClose = func() error { return nil}
 	resp, err = client.Core.Do(request) ; if err != nil {
 		return
@@ -39,7 +42,7 @@ func (client *Client) CloseIdleConnections() {
 }
 // 发送 query from json 请求等常见下使用 http.Request{} 需要设置 header 等繁琐事项
 // 使用 xhttp.Send() 和 xhttp.Request{} 可以高效的创建请求
-func (client *Client) Send(ctx context.Context, method Method, url string, request Request) (resp *http.Response, bodyClose func() error, statusCode int, err error)  {
+func (client *Client) Send(ctx context.Context, method Method, url string, request SendRequest) (resp *http.Response, bodyClose func() error, statusCode int, err error)  {
 	// 防止空指针错误
 	bodyClose = func() error { return nil }
 	var httpRequest *http.Request
