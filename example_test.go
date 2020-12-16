@@ -11,7 +11,7 @@ import (
 )
 
 func TestExample(t *testing.T) {
-	ExampleClient_DO()
+	ExampleClient_Do()
 	ExampleClient_Send()
 }
 // net/http 的 &http.Client{}.Do() 函数只返回了  resp, err
@@ -19,8 +19,8 @@ func TestExample(t *testing.T) {
 // 并且一般情况应该判断 resp.StatusCode != 200 并返回错误
 // 所以 &xhttp.Client{}.Do() 的函数签名是 (client *Client) Do(request *http.Request) (resp *http.Response, bodyClose func() error, statusCode int, err error)
 // 这样使用者就不容易忘记处理 statusCode 和 bodyClose ，并且 bodyClose 处理了resp 空 nil的情况
-func ExampleClient_DO() {
-	log.Print("ExampleClient_DO")
+func ExampleClient_Do() {
+	log.Print("ExampleClient_Do")
 	ctx := context.TODO()
 	client := xhttp.NewClient(&http.Client{})
 	url := "https://mockend.com/goclub/http/posts?views_eq=20"
