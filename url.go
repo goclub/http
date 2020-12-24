@@ -15,3 +15,8 @@ const CONNECT Method = "CONNECT"
 const OPTIONS Method = "OPTIONS"
 const TRACE Method = "TRACE"
 const PATCH Method = "PATCH"
+
+type Pattern struct {
+	Method Method
+	Path string
+}
