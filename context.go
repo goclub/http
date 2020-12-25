@@ -52,9 +52,9 @@ func (c *Context) Bytes(b []byte) error {
 	return nil
 }
 // 设置 header Content-Type text/html; charset=UTF-8 并输出 buffer
-func (c *Context) Render(render func(buffer *bytes.Buffer)) error {
+func (c *Context) Render(render func(buffer *bytes.Buffer) error) error {
 	buffer := bytes.NewBuffer(nil)
-	render(buffer)
+	err := render(buffer) ; if err != nil {return err}
 	c.Writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	return c.Bytes(buffer.Bytes())
 }

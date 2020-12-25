@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	xhttp "github.com/goclub/http"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +25,8 @@ func main () {
 	RequestFile(router)
 	// response
 	ResponseBytes(router)
+	ResponseHTML(router)
+	ResponseTemplate(router)
 	addr := ":3000"
 	serve := http.Server{
 		Handler: router,
@@ -184,8 +187,9 @@ func RenderFormFile(router *xhttp.Router) {
 　　　		<input type="file" name="file" /> <br />
 　　　		<button type="submit" >上传</button>
 		</form>`)
-		return c.Render(func(buffer *bytes.Buffer) {
+		return c.Render(func(buffer *bytes.Buffer) error {
 			buffer.Write(html)
+			return nil
 		})
 	})
 }
@@ -208,5 +212,30 @@ func ResponseBytes(router *xhttp.Router) {
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
 		return c.Bytes([]byte("goclub"))
+	})
+}
+func ResponseHTML(router *xhttp.Router) {
+	pattern := xhttp.Pattern{
+		xhttp.GET, "/response/html",
+	}
+	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
+		return c.Render(func(buffer *bytes.Buffer) error {
+			buffer.WriteString(`<a href="http://github.com/goclub">goclub</a>`)
+			return nil
+		})
+	})
+}
+var responseTPL =  template.Must(template.New("").Parse("name {{.Name}}"))
+func ResponseTemplate(router *xhttp.Router) {
+	pattern := xhttp.Pattern{
+		xhttp.GET, "/response/template",
+	}
+	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
+		return c.Render(func(buffer *bytes.Buffer) error {
+			data := struct {
+				Name string
+			}{Name:"nimoc"}
+			return responseTPL.Execute(buffer, data)
+		})
 	})
 }
