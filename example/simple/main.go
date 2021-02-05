@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"WriteBytes"
 	"context"
 	"fmt"
 	xhttp "github.com/goclub/http"
@@ -24,7 +24,7 @@ func main () {
 	RenderFormFile(router)
 	RequestFile(router)
 	// response
-	ResponseBytes(router)
+	ResponseWriteBytes(router)
 	ResponseHTML(router)
 	ResponseTemplate(router)
 	addr := ":3000"
@@ -76,7 +76,7 @@ func RequestBindQuery(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 
@@ -91,7 +91,7 @@ func RequestBindFormUrlencoded(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 /*
@@ -111,7 +111,7 @@ func RequestBindFormData(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 /*
@@ -134,7 +134,7 @@ func RequestBindJSON(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 
@@ -159,7 +159,7 @@ func RequestBindQueryAndJSON(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 
@@ -174,7 +174,7 @@ func RequestBindParam(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 func RenderFormFile(router *xhttp.Router) {
@@ -187,7 +187,7 @@ func RenderFormFile(router *xhttp.Router) {
 　　　		<input type="file" name="file" /> <br />
 　　　		<button type="submit" >上传</button>
 		</form>`)
-		return c.Render(func(buffer *bytes.Buffer) error {
+		return c.Render(func(buffer *WriteBytes.Buffer) error {
 			buffer.Write(html)
 			return nil
 		})
@@ -203,15 +203,15 @@ func RequestFile(router *xhttp.Router) {
 		defer file.Close()
 		data, reject := ioutil.ReadAll(file) ; if reject != nil {return}
 		body :=  append([]byte(fileHeader.Filename + ":"), data...)
-		return c.Bytes(body)
+		return c.WriteBytes(body)
 	})
 }
-func ResponseBytes(router *xhttp.Router) {
+func ResponseWriteBytes(router *xhttp.Router) {
 	pattern := xhttp.Pattern{
-		xhttp.GET, "/response/bytes",
+		xhttp.GET, "/response/WriteBytes",
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
-		return c.Bytes([]byte("goclub"))
+		return c.WriteBytes([]byte("goclub"))
 	})
 }
 func ResponseHTML(router *xhttp.Router) {
@@ -219,7 +219,7 @@ func ResponseHTML(router *xhttp.Router) {
 		xhttp.GET, "/response/html",
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
-		return c.Render(func(buffer *bytes.Buffer) error {
+		return c.Render(func(buffer *WriteBytes.Buffer) error {
 			buffer.WriteString(`<a href="http://github.com/goclub">goclub</a>`)
 			return nil
 		})
@@ -231,7 +231,7 @@ func ResponseTemplate(router *xhttp.Router) {
 		xhttp.GET, "/response/template",
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
-		return c.Render(func(buffer *bytes.Buffer) error {
+		return c.Render(func(buffer *WriteBytes.Buffer) error {
 			data := struct {
 				Name string
 			}{Name:"nimoc"}

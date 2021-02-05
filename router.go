@@ -10,10 +10,12 @@ import (
 type Router struct {
 	router *mux.Router
 	OnCatchError func(c *Context, errInterface interface{}) error
+	OnCatchPanic func(c *Context, r interface{}) error
 	patterns []string
 }
 type RouterOption struct {
 	OnCatchError func(c *Context, errInterface interface{}) error
+	OnCatchPanic func(c *Context, r interface{}) error
 }
 func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	router.router.ServeHTTP(w, r)
@@ -23,6 +25,7 @@ func NewRouter(opt RouterOption) *Router {
 	return &Router{
 		router: r,
 		OnCatchError: opt.OnCatchError,
+		OnCatchPanic: opt.OnCatchPanic,
 	}
 }
 
