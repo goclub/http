@@ -1,7 +1,7 @@
 package main
 
 import (
-	"WriteBytes"
+	"bytes"
 	"context"
 	"fmt"
 	xhttp "github.com/goclub/http"
@@ -51,14 +51,7 @@ func main () {
 }
 
 func NewRouter() *xhttp.Router {
-	router := xhttp.NewRouter(xhttp.RouterOption{
-		OnCatchError: func(c *xhttp.Context, errInterface interface{}) error {
-			if errInterface != nil {
-				panic(errInterface)
-			}
-			return nil
-		},
-	})
+	router := xhttp.NewRouter(xhttp.RouterOption{})
 	return router
 }
 
@@ -187,7 +180,7 @@ func RenderFormFile(router *xhttp.Router) {
 　　　		<input type="file" name="file" /> <br />
 　　　		<button type="submit" >上传</button>
 		</form>`)
-		return c.Render(func(buffer *WriteBytes.Buffer) error {
+		return c.Render(func(buffer *bytes.Buffer) error {
 			buffer.Write(html)
 			return nil
 		})
@@ -219,7 +212,7 @@ func ResponseHTML(router *xhttp.Router) {
 		xhttp.GET, "/response/html",
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
-		return c.Render(func(buffer *WriteBytes.Buffer) error {
+		return c.Render(func(buffer *bytes.Buffer) error {
 			buffer.WriteString(`<a href="http://github.com/goclub">goclub</a>`)
 			return nil
 		})
@@ -231,7 +224,7 @@ func ResponseTemplate(router *xhttp.Router) {
 		xhttp.GET, "/response/template",
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
-		return c.Render(func(buffer *WriteBytes.Buffer) error {
+		return c.Render(func(buffer *bytes.Buffer) error {
 			data := struct {
 				Name string
 			}{Name:"nimoc"}

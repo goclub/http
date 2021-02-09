@@ -20,7 +20,7 @@ func coreHandleFunc(serve *Router, router *mux.Router, pattern Pattern,  handler
 		defer func() {
 			r := recover()
 			if r  != nil {
-				c.CheckError(r) ; return
+				c.CheckPanic(r) ; return
 			}
 		}()
 		err := handler(c)

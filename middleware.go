@@ -17,7 +17,7 @@ func middlewareUse(serve *Router, router *mux.Router, middleware Middleware) {
 			defer func() {
 				r := recover()
 				if r  != nil {
-					c.CheckError(r) ; return
+					c.CheckPanic(r) ; return
 				}
 			}()
 			mwErr := middleware(c, func() error {
