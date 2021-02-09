@@ -43,6 +43,9 @@ func (c *Context) Param(name string) (param string, err error) {
 	}
 	return param, nil
 }
+func (c *Context) WriteStatusCode(statusCode int) {
+	c.Writer.WriteHeader(statusCode)
+}
 // 等同于 writer.Write(data) ,但函数签名返回 error 不返回 int
 func (c *Context) WriteBytes(b []byte) error {
 	_, err := c.Writer.Write(b)
@@ -79,8 +82,8 @@ func (c *Context) CheckPanic(r interface{}) {
 	}
 }
 // 让 Router{}.OnCatchError 处理传入的错误
-func (c *Context) CheckError(errInterface interface{}) {
-	err := c.router.OnCatchError(c, errInterface)
+func (c *Context) CheckError(err error) {
+	err = c.router.OnCatchError(c, err)
 	if err != nil {
 		panic(err)
 	}
