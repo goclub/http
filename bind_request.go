@@ -109,7 +109,7 @@ func parserField(unresolvedCount *int, key string, get func(key string) string, 
 			if err != nil { return err }
 			*unresolvedCount--
 		} else {
-			err := xconv.StringReflect(value, rValue)
+			err := xconv.StringToReflect(value, rValue)
 			if err != nil { return err }
 			*unresolvedCount--
 		}

@@ -24,7 +24,7 @@ func NewContext (w http.ResponseWriter, r *http.Request, router *Router) *Contex
 	}
 }
 // 等同于 c.Request.Context()
-func (c *Context) Context() context.Context {
+func (c *Context) RequestContext() context.Context {
 	return c.Request.Context()
 }
 // 获取格式为: /user/{userID} URL的参数
@@ -43,8 +43,11 @@ func (c *Context) Param(name string) (param string, err error) {
 	}
 	return param, nil
 }
+func (c *Context) WriteStatusCode(statusCode int) {
+	c.Writer.WriteHeader(statusCode)
+}
 // 等同于 writer.Write(data) ,但函数签名返回 error 不返回 int
-func (c *Context) Bytes(b []byte) error {
+func (c *Context) WriteBytes(b []byte) error {
 	_, err := c.Writer.Write(b)
 	if err != nil {
 		return err
@@ -56,24 +59,31 @@ func (c *Context) Render(render func(buffer *bytes.Buffer) error) error {
 	buffer := bytes.NewBuffer(nil)
 	err := render(buffer) ; if err != nil {return err}
 	c.Writer.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	return c.Bytes(buffer.Bytes())
+	return c.WriteBytes(buffer.Bytes())
 }
 // 响应 json
-func (c *Context) JSON(v interface{}) error {
+func (c *Context) WriteJSON(v interface{}) error {
 	data, err := xjson.Marshal(v)
 	if err != nil {
 		return err
 	}
 	c.Writer.Header().Set("Content-Type", "application/json")
-	return c.Bytes(data)
+	return c.WriteBytes(data)
 }
 // 绑定请求，支持自定义结构体表 `query` `form` `param`
 func (c *Context) BindRequest(ptr interface{}) error {
 	return BindRequest(ptr, c.Request)
 }
 // 让 Router{}.OnCatchError 处理传入的错误
-func (c *Context) CheckError(errInterface interface{}) {
-	err := c.router.OnCatchError(c, errInterface)
+func (c *Context) CheckPanic(r interface{}) {
+	err := c.router.OnCatchPanic(c, r)
+	if err != nil {
+		panic(err)
+	}
+}
+// 让 Router{}.OnCatchError 处理传入的错误
+func (c *Context) CheckError(err error) {
+	err = c.router.OnCatchError(c, err)
 	if err != nil {
 		panic(err)
 	}

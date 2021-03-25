@@ -22,7 +22,7 @@ func main () {
 	RenderFormFile(router)
 	RequestFile(router)
 	// response
-	ResponseBytes(router)
+	ResponseWriteBytes(router)
 	ResponseHTML(router)
 	ResponseTemplate(router)
 	addr := ":3000"
@@ -49,14 +49,7 @@ func main () {
 }
 
 func NewRouter() *xhttp.Router {
-	router := xhttp.NewRouter(xhttp.RouterOption{
-		OnCatchError: func(c *xhttp.Context, errInterface interface{}) error {
-			if errInterface != nil {
-				panic(errInterface)
-			}
-			return nil
-		},
-	})
+	router := xhttp.NewRouter(xhttp.RouterOption{})
 	return router
 }
 
@@ -74,7 +67,7 @@ func RequestBindQuery(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 
@@ -89,7 +82,7 @@ func RequestBindFormUrlencoded(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 /*
@@ -109,7 +102,7 @@ func RequestBindFormData(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 /*
@@ -132,7 +125,7 @@ func RequestBindJSON(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 
@@ -157,7 +150,7 @@ func RequestBindQueryAndJSON(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 
@@ -172,7 +165,7 @@ func RequestBindParam(router *xhttp.Router) {
 		}{}
 		reject = c.BindRequest(&req) ; if reject != nil {return}
 		dump := fmt.Sprintf("%+v", req)
-		return c.Bytes([]byte(dump))
+		return c.WriteBytes([]byte(dump))
 	})
 }
 func RenderFormFile(router *xhttp.Router) {
@@ -201,15 +194,15 @@ func RequestFile(router *xhttp.Router) {
 		defer file.Close()
 		data, reject := ioutil.ReadAll(file) ; if reject != nil {return}
 		body :=  append([]byte(fileHeader.Filename + ":"), data...)
-		return c.Bytes(body)
+		return c.WriteBytes(body)
 	})
 }
-func ResponseBytes(router *xhttp.Router) {
+func ResponseWriteBytes(router *xhttp.Router) {
 	pattern := xhttp.Pattern{
-		xhttp.GET, "/response/bytes",
+		xhttp.GET, "/response/WriteBytes",
 	}
 	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
-		return c.Bytes([]byte("goclub"))
+		return c.WriteBytes([]byte("goclub"))
 	})
 }
 func ResponseHTML(router *xhttp.Router) {
