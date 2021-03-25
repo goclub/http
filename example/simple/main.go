@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 )
-
 func main () {
 	router := NewRouter()
 	// request
@@ -18,7 +17,6 @@ func main () {
 	RequestBindFormUrlencoded(router)
 	RequestBindFormData(router)
 	RequestBindJSON(router)
-	RequestBindQueryAndJSON(router)
 	RequestBindQueryAndJSON(router)
 	RequestBindParam(router)
 	RenderFormFile(router)
