@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 func main () {
 	router := NewRouter()
@@ -25,6 +26,7 @@ func main () {
 	ResponseWriteBytes(router)
 	ResponseHTML(router)
 	ResponseTemplate(router)
+	GetSetCookie(router)
 	addr := ":3000"
 	serve := http.Server{
 		Handler: router,
@@ -228,5 +230,38 @@ func ResponseTemplate(router *xhttp.Router) {
 			}{Name:"nimoc"}
 			return responseTPL.Execute(buffer, data)
 		})
+	})
+}
+
+func GetSetCookie(router *xhttp.Router) {
+	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (reject error) {
+		query := c.Request.URL.Query()
+		switch query.Get("kind") {
+		case "get":
+			var nameCookie *http.Cookie
+			var hasValue bool
+			nameCookie, hasValue, reject = c.Cookie("name") ; if reject != nil {
+				return
+			}
+			var name string
+			if !hasValue {
+				name = ""
+			} else {
+				name = nameCookie.Value
+			}
+			return c.WriteBytes([]byte("name:" + name))
+		case "set":
+			name := query.Get("name")
+			if name == "" {
+				name = time.Now().String()
+			}
+			c.SetCookie(&http.Cookie{
+				Name: "name",
+				Value: name,
+			})
+			return c.WriteBytes([]byte("set cookie done"))
+		default:
+			return c.WriteBytes([]byte("kind query.must be get or set"))
+		}
 	})
 }
