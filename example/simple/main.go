@@ -5,12 +5,14 @@ import (
 	"context"
 	"fmt"
 	xhttp "github.com/goclub/http"
+	"github.com/google/uuid"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 )
+type traceID string
 func main () {
 	router := NewRouter()
 	// request
@@ -22,6 +24,11 @@ func main () {
 	RequestBindParam(router)
 	RenderFormFile(router)
 	RequestFile(router)
+	router.Use(func(c *xhttp.Context, next xhttp.Next) (reject error) {
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), traceID("traceID"), uuid.New().String()))
+		return next()
+	})
+	RequestTraceID(router)
 	// response
 	ResponseWriteBytes(router)
 	ResponseHTML(router)
@@ -197,6 +204,14 @@ func RequestFile(router *xhttp.Router) {
 		data, reject := ioutil.ReadAll(file) ; if reject != nil {return}
 		body :=  append([]byte(fileHeader.Filename + ":"), data...)
 		return c.WriteBytes(body)
+	})
+}
+func RequestTraceID(router *xhttp.Router) {
+	pattern := xhttp.Pattern{
+		xhttp.GET, "/request/trace_id",
+	}
+	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
+		return c.WriteBytes([]byte(fmt.Sprintf("traceID: %s", c.RequestContext().Value(traceID("traceID")))))
 	})
 }
 func ResponseWriteBytes(router *xhttp.Router) {

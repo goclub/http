@@ -7,6 +7,7 @@ require (
 	github.com/goclub/json v0.0.0-20201216064424-4c200d38c18f
 	github.com/goclub/reflect v0.0.0-20201224025738-7f37ac2827fc
 	github.com/goclub/time v0.0.0-20210216123546-3bdf423eb95f
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/pkg/errors v0.9.1
