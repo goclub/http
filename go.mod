@@ -9,7 +9,6 @@ require (
 	github.com/goclub/time v0.0.0-20210216123546-3bdf423eb95f
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
-	github.com/gorilla/sessions v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 )
