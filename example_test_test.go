@@ -3,6 +3,7 @@ package xhttp_test
 import (
 	"errors"
 	xhttp "github.com/goclub/http"
+	"log"
 	"net/http"
 	"strconv"
 	"testing"
@@ -20,10 +21,12 @@ func newTestRouter() *xhttp.Router {
 	router := xhttp.NewRouter(xhttp.RouterOption{
 		OnCatchError: func(c *xhttp.Context, err error) error {
 			c.WriteStatusCode(500)
+			log.Print(err)
 			return c.WriteBytes([]byte("error"))
 		},
 		OnCatchPanic: func(c *xhttp.Context, recoverValue interface{}) error {
 			c.WriteStatusCode(500)
+			log.Print(recoverValue)
 			return c.WriteBytes([]byte("panic"))
 		},
 	})
@@ -58,7 +61,7 @@ func newTestRouter() *xhttp.Router {
 		return errors.New("abc")
 	})
 	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/panic"}, func(c *xhttp.Context) (reject error) {
-		panic("abc")
+		panic("123")
 		return nil
 	})
 	return router

@@ -1,6 +1,7 @@
 package xhttp
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -12,7 +13,7 @@ type Router struct {
 	router *mux.Router
 	OnCatchError func(c *Context, err error) error
 	OnCatchPanic func(c *Context, recoverValue interface{}) error
-	patterns []string
+	patterns []Pattern
 }
 type RouterOption struct {
 	OnCatchError func(c *Context, err error) error
@@ -46,6 +47,21 @@ func NewRouter(opt RouterOption) *Router {
 	}
 }
 
-func (router Router) LogPatterns() {
-	log.Print("\n" + strings.Join(router.patterns, "\n"))
+func (router Router) LogPatterns(addr string) {
+	var messages []string
+	messages = append(messages, "Listen http://localhost" + addr)
+	for _, pattern := range router.patterns {
+		method := fmt.Sprintf("%-7s", pattern.Method.String())
+		url := "http://localhost" + addr + pattern.Path
+		if pattern.Method == GET {
+			messages = append(messages,  method + " " + url)
+		} else {
+			messages = append(messages,  `curl --location --request `+pattern.Method.String()+` '`+ url +`'`)
+		}
+	}
+	log.Print("\n" + strings.Join(messages, "\n"))
+}
+
+func (router Router) Static(rootPath string, handler http.Handler) {
+	router.router.PathPrefix(rootPath).Handler(http.StripPrefix(rootPath, handler))
 }

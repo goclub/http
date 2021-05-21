@@ -39,8 +39,7 @@ func main () {
 		Handler: router,
 		Addr: addr,
 	}
-	log.Print("http://127.0.0.1" + addr)
-	router.LogPatterns()
+	router.LogPatterns(addr)
 	go func() {
 		listenErr := serve.ListenAndServe() ; if listenErr !=nil {
 			if listenErr != http.ErrServerClosed {

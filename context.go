@@ -104,3 +104,8 @@ func (c *Context) Cookie(name string) (value *http.Cookie, has bool, reject erro
 func (c *Context) SetCookie(cookie *http.Cookie) {
 	http.SetCookie(c.Writer, cookie)
 }
+func (c *Context) ClearCookie(cookie *http.Cookie) {
+	// -1 标识清除cookie
+	cookie.MaxAge = -1
+	http.SetCookie(c.Writer, cookie)
+}

@@ -1,8 +1,6 @@
 package xhttp
 
-
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -14,7 +12,7 @@ func (serve *Router) HandleFunc(pattern Pattern, handler HandleFunc) {
 }
 
 func coreHandleFunc(serve *Router, router *mux.Router, pattern Pattern,  handler HandleFunc) {
-	serve.patterns = append(serve.patterns,  fmt.Sprintf("%-7s", pattern.Method.String()) + " " + pattern.Path)
+	serve.patterns = append(serve.patterns, pattern)
 	router.HandleFunc(pattern.Path, func(w http.ResponseWriter, r *http.Request) {
 		c := NewContext(w, r, serve)
 		defer func() {
