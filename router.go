@@ -56,7 +56,7 @@ func (router Router) LogPatterns(addr string) {
 		if pattern.Method == GET {
 			messages = append(messages,  method + " " + url)
 		} else {
-			messages = append(messages,  `curl --location --request `+pattern.Method.String()+` '`+ url +`'`)
+			messages = append(messages,  `curl  --request \` + "\n" +fmt.Sprintf("%-6s", pattern.Method.String())+` '`+ url +`' --header 'Content-Type: application/json' --data-raw '{}'`)
 		}
 	}
 	log.Print("\n" + strings.Join(messages, "\n"))
