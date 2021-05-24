@@ -139,7 +139,7 @@ func main() {
 			return
 		}
 		responseTime := time.Now().Sub(requestTime)
-		log.Print("Response: (" , responseTime.String(), ")", c.Request.Method, c.Request.URL.String())
+		log.Print("Response: (" , responseTime.String(), ") ", c.Request.Method, c.Request.URL.String())
 		return nil
 	})
 	// goclub/http 自己实现了绑定器，用于绑定各种 http 请求

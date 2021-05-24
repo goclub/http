@@ -51,12 +51,12 @@ func (router Router) LogPatterns(addr string) {
 	var messages []string
 	messages = append(messages, "Listen http://localhost" + addr)
 	for _, pattern := range router.patterns {
-		method := fmt.Sprintf("%-7s", pattern.Method.String())
+		method := fmt.Sprintf("%-13s", pattern.Method.String())
 		url := "http://localhost" + addr + pattern.Path
 		if pattern.Method == GET {
 			messages = append(messages,  method + " " + url)
 		} else {
-			messages = append(messages,  `curl  --request \` + "\n" +fmt.Sprintf("%-6s", pattern.Method.String())+` '`+ url +`' --header 'Content-Type: application/json' --data-raw '{}'`)
+			messages = append(messages,  `curl -X ` + pattern.Method.String() + ` '`+ url +`' --header 'Content-Type: application/json' --data-raw '{}'`)
 		}
 	}
 	log.Print("\n" + strings.Join(messages, "\n"))
