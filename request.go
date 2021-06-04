@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type RequestQuery interface {
@@ -30,11 +31,20 @@ type SendRequest struct {
 	FormData RequestFormData
 	Header RequestHeader
 	JSON io.Reader
+	Body io.Reader
 	Debug bool
+	Retry RequestRetry
+}
+type RequestRetry struct {
+	Times uint8
+	Interval time.Duration `note:"建议设为0。设0则请求失败后立即重试"`
 }
 
 func (request SendRequest) HttpRequest(ctx context.Context, method Method, url string) (*http.Request, error) {
 	var bodyReader io.Reader
+	if request.Body != nil {
+		bodyReader = request.Body
+	}
 	// json
 	if request.JSON != nil {
 		bodyReader = request.JSON
