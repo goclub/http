@@ -107,7 +107,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "500-504-200", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
 			Retry: RequestRetry{
 				Times: 1,
 				Interval:  time.Millisecond*100,
@@ -136,7 +136,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "200", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/200", SendRequest{
 			Retry: RequestRetry{
 				Times: 2,
 				Check: func(resp *http.Response, requestErr error) (shouldRetry bool) {

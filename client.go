@@ -63,7 +63,7 @@ func (client *Client) Send(ctx context.Context, method Method, origin string, pa
 	if path == "" {
 
 	} else if strings.HasPrefix(path, "/") == false {
-		log.Print("goclub/http: Send(ctx, origin, path) your forget path prefix /")
+		log.Print("goclub/http: Send(ctx, origin, path) your forget path prefix / path:(" + path +")")
 		path = "/" + path
 	}
 
