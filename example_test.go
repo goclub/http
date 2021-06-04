@@ -47,7 +47,7 @@ func ExampleClient_Send() {
 		log.Print("ExampleClient_Send:query")
 		ctx := context.TODO()
 		client := xhttp.NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com/goclub/http/posts", xhttp.SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com", "/goclub/http/posts", xhttp.SendRequest{
 			Query:          xhttp.ExampleSendQuery{
 				Published: true,
 				Limit:     2,

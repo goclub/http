@@ -38,6 +38,7 @@ type SendRequest struct {
 type RequestRetry struct {
 	Times uint8
 	Interval time.Duration `eg:"time.Millisecond*100"`
+	BackupOrigin string `note:"灾备接口域名必须以 http:// 或 https:// 开头"`
 	Check func(resp *http.Response, requestErr error) (shouldRetry bool) `note:"if Check == nil { Check = xhttp.DefaultRequestRetryCheck }"`
 }
 func DefaultRequestRetryCheck (resp *http.Response, err error) (shouldRetry bool) {

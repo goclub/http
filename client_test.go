@@ -43,7 +43,7 @@ func TestClient_SendRetry(t *testing.T) {
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
 		// dns 出问题的时候会 no such host
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://nosuchhost102923092190311.com", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://nosuchhost102923092190311.com", "", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -57,7 +57,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/429", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/429", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -70,7 +70,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/500", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -83,7 +83,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/504", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/504", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -96,7 +96,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/500-504-200", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
 		
 		}) ; assert.NoError(t, err)
 		defer assert.NoError(t, bodyClose())
@@ -107,7 +107,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/500-504-200", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "500-504-200", SendRequest{
 			Retry: RequestRetry{
 				Times: 1,
 				Interval:  time.Millisecond*100,
@@ -121,7 +121,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/500-504-200", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
 			Retry: RequestRetry{
 				Times: 2,
 				Interval:  time.Millisecond*100,
@@ -136,14 +136,28 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222/200", SendRequest{
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "200", SendRequest{
 			Retry: RequestRetry{
 				Times: 2,
 				Check: func(resp *http.Response, requestErr error) (shouldRetry bool) {
 					return true
 				},
 			},
-			Debug: true,
+			// Debug: true,
+		}) ; assert.NoError(t, err)
+		defer assert.NoError(t, bodyClose())
+		assert.Equal(t, statusCode, 200)
+		_=resp
+	}
+	{
+		ctx := context.Background()
+		client := NewClient(&http.Client{})
+		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://apierror.weixin.qq.com", "/cgi-bin/token", SendRequest{
+			Retry: RequestRetry{
+				Times: 2,
+				BackupOrigin: "https://api2.weixin.qq.com",
+			},
+			// Debug: true,
 		}) ; assert.NoError(t, err)
 		defer assert.NoError(t, bodyClose())
 		assert.Equal(t, statusCode, 200)
