@@ -37,9 +37,27 @@ type SendRequest struct {
 }
 type RequestRetry struct {
 	Times uint8
-	Interval time.Duration `note:"建议设为0。设0则请求失败后立即重试"`
+	Interval time.Duration `eg:"time.Millisecond*100"`
+	Check func(resp *http.Response, requestErr error) (shouldRetry bool) `note:"if Check == nil { Check = xhttp.DefaultRequestRetryCheck }"`
 }
-
+func DefaultRequestRetryCheck (resp *http.Response, err error) (shouldRetry bool) {
+	if err != nil {
+		return true
+	}
+	// 列出需要重试的条件
+	switch resp.StatusCode {
+	case http.StatusTooManyRequests:
+		return true
+	case 0:
+		return true
+	default:
+		if resp.StatusCode >= 500 {
+			return true
+		} else {
+			return false
+		}
+	}
+}
 func (request SendRequest) HttpRequest(ctx context.Context, method Method, url string) (*http.Request, error) {
 	var bodyReader io.Reader
 	if request.Body != nil {

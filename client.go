@@ -3,6 +3,7 @@ package xhttp
 import (
 	"context"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -57,32 +58,42 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, r
 // 发送 query from json 请求等常见下使用 http.Request{} 需要设置 header 等繁琐事项
 // 使用 xhttp.Send() 和 xhttp.Request{} 可以高效的创建请求
 func (client *Client) Send(ctx context.Context, method Method, url string, request SendRequest) (resp *http.Response, bodyClose func() error, statusCode int, err error)  {
+	if request.Retry.Check == nil {
+		request.Retry.Check = DefaultRequestRetryCheck
+	}
 	// 防止空指针错误
 	bodyClose = func() error { return nil }
 	requestTimes := request.Retry.Times+1
-	for  {
+	// safe count 用于避免 request.Retry.Check 写错导致的死循环，这种死循环可能在接收请求的服务器出现错误时候才能发现。
+	for safeCount := 0; safeCount<math.MaxUint8;safeCount++ {
 		select {
 			case <-ctx.Done():
 				err = ctx.Err()
 				return
 		default:
-			resp, bodyClose, statusCode, err = client.coreSend(ctx, method, url, request) ; if err != nil {
-				return
-			}
+			resp, bodyClose, statusCode, err = client.coreSend(ctx, method, url, request)
+			requestTimes--
+			shouldRetry := request.Retry.Check(resp, err)
+			// 强制 200 不重试
 			if statusCode == 200 {
-				return
-			} else {
-				requestTimes--
+				shouldRetry = false
+			}
+			if shouldRetry {
 				if requestTimes <= 0 {
 					return
 				} else {
 					if request.Debug {
-						log.Print("goclub/http Client{}.Send() " + method.String() + " " + url + " response status code("+strconv.Itoa(statusCode)+") retry(" + strconv.FormatUint(uint64(requestTimes), 10) + ")")
+						log.Print("goclub/http Client{}.Send() " + method.String() + " " + url + " response status code("+strconv.Itoa(statusCode)+") retry(" + strconv.FormatUint(uint64(requestTimes), 10) + ")  try again in " + request.Retry.Interval.String())
 					}
 					time.Sleep(request.Retry.Interval)
 					continue
 				}
 			}
+			if err != nil {
+				return
+			}
+			return
 		}
 	}
+	return
 }
