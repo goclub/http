@@ -11,8 +11,5 @@ func GracefulClose(closeFunc func()) {
 	signal.Notify(exit, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 	<-exit
 	closeFunc()
-	go func() {
-		<-exit
-	}()
 }
 

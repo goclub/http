@@ -8,7 +8,7 @@ import (
 )
 
 
-type HandleFunc func(c *Context) (reject error)
+type HandleFunc func(c *Context) (err error)
 func (serve *Router) HandleFunc(pattern Pattern, handler HandleFunc) {
 	coreHandleFunc(serve, serve.router, pattern, handler)
 }

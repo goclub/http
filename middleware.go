@@ -6,7 +6,7 @@ import (
 )
 
 type Next func() error
-type Middleware func(c *Context, next Next) (reject error)
+type Middleware func(c *Context, next Next) (err error)
 func (serve *Router) Use(middleware Middleware) {
 	middlewareUse(serve, serve.router, middleware)
 }

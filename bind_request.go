@@ -97,6 +97,7 @@ func BindRequest(ptr interface{}, r *http.Request) error {
 }
 
 func parserField(unresolvedCount *int, key string, get func(key string) string, rValue reflect.Value, rType reflect.Type)  error {
+
 	if *unresolvedCount == 0 {
 		return nil
 	}
