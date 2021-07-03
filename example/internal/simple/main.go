@@ -5,12 +5,14 @@ import (
 	"context"
 	"fmt"
 	xhttp "github.com/goclub/http"
+	"github.com/google/uuid"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
-
+type traceID string
 func main () {
 	router := NewRouter()
 	// request
@@ -19,21 +21,25 @@ func main () {
 	RequestBindFormData(router)
 	RequestBindJSON(router)
 	RequestBindQueryAndJSON(router)
-	RequestBindQueryAndJSON(router)
 	RequestBindParam(router)
 	RenderFormFile(router)
 	RequestFile(router)
+	router.Use(func(c *xhttp.Context, next xhttp.Next) (reject error) {
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), traceID("traceID"), uuid.New().String()))
+		return next()
+	})
+	RequestTraceID(router)
 	// response
 	ResponseWriteBytes(router)
 	ResponseHTML(router)
 	ResponseTemplate(router)
+	GetSetCookie(router)
 	addr := ":3000"
 	serve := http.Server{
 		Handler: router,
 		Addr: addr,
 	}
-	log.Print("http://127.0.0.1" + addr)
-	router.LogPatterns()
+	router.LogPatterns(addr)
 	go func() {
 		listenErr := serve.ListenAndServe() ; if listenErr !=nil {
 			if listenErr != http.ErrServerClosed {
@@ -199,6 +205,14 @@ func RequestFile(router *xhttp.Router) {
 		return c.WriteBytes(body)
 	})
 }
+func RequestTraceID(router *xhttp.Router) {
+	pattern := xhttp.Pattern{
+		xhttp.GET, "/request/trace_id",
+	}
+	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
+		return c.WriteBytes([]byte(fmt.Sprintf("traceID: %s", c.RequestContext().Value(traceID("traceID")))))
+	})
+}
 func ResponseWriteBytes(router *xhttp.Router) {
 	pattern := xhttp.Pattern{
 		xhttp.GET, "/response/WriteBytes",
@@ -230,5 +244,38 @@ func ResponseTemplate(router *xhttp.Router) {
 			}{Name:"nimoc"}
 			return responseTPL.Execute(buffer, data)
 		})
+	})
+}
+
+func GetSetCookie(router *xhttp.Router) {
+	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (reject error) {
+		query := c.Request.URL.Query()
+		switch query.Get("kind") {
+		case "get":
+			var nameCookie *http.Cookie
+			var hasValue bool
+			nameCookie, hasValue, reject = c.Cookie("name") ; if reject != nil {
+				return
+			}
+			var name string
+			if !hasValue {
+				name = ""
+			} else {
+				name = nameCookie.Value
+			}
+			return c.WriteBytes([]byte("name:" + name))
+		case "set":
+			name := query.Get("name")
+			if name == "" {
+				name = time.Now().String()
+			}
+			c.SetCookie(&http.Cookie{
+				Name: "name",
+				Value: name,
+			})
+			return c.WriteBytes([]byte("set cookie done"))
+		default:
+			return c.WriteBytes([]byte("kind query.must be get or set"))
+		}
 	})
 }

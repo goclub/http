@@ -15,15 +15,16 @@ func middlewareUse(serve *Router, router *mux.Router, middleware Middleware) {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			c := NewContext(w,r, serve)
 			defer func() {
-				r := recover()
-				if r  != nil {
-					c.CheckPanic(r) ; return
+				recoverValue := recover()
+				if recoverValue  != nil {
+					c.CheckPanic(recoverValue) ; return
 				}
 			}()
-			mwErr := middleware(c, func() error {
-				handler.ServeHTTP(w, r)
+			next := func() error {
+				handler.ServeHTTP(c.Writer, c.Request)
 				return nil
-			})
+			}
+			mwErr := middleware(c, next)
 			if mwErr != nil {
 				c.CheckError(mwErr) ; return
 			}

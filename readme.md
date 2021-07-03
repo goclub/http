@@ -2,6 +2,7 @@
 
 > 基于 Go 标准库 net/http 扩展出一些安全便捷的方法
 
+
 ```go
 package main
 import "github.com/goclub/http"
@@ -10,12 +11,38 @@ func main () {
 }
 ```
 
-## 特性
 
-1. 封装 `xhttp.Client{}` 使用 `client.Do()` 时 不会忘记处理 `resp.Body.Close` 和 `resp.StatusCode` 
-2. 新增 `xhttp.Client{}.Send()` 方法高性能更便捷的发起常见请求（`query` `formurlencoded` `formdata` `json`）
+## http server
+
+**示例**
+
+1. [like gin example](./example/internal/gin/main.go)
+
+**相关的包**
+
+1. [goclub/session](https://github.com/goclub/session)
+2. [goclub/validator](https://github.com/goclub/validator)
+3. [goclub/error](https://github.com/goclub/error)
+
+## http client
+
+1. [Client.Send](https://pkg.go.dev/github.com/goclub/http#Client.Send)
+2. [Client.Do](https://pkg.go.dev/github.com/goclub/http#Client.Do)
+
+
+## 特性
+1. http server 支持 `OnCatchError` `OnCatchPanic` 拦截器，让错误处理更简单，让panic时对客户端更友好。
+2. http client  `xhttp.Client{}.Send()` 高易用高性能的发起常见请求（`query` `formurlencoded` `formdata` `json`）
 
 ## 特殊说明
+
+### reject error
+
+http server `Router{}.HandleFunc` `Router{}.Use` 函数签名的出参都有 `(reject error)` ，你可以给改成 (err error) ，使用 reject 只是为了与 https://github.com/goclub/error#reject 呼应。
+
+如果没有错误则 `return nil`, 如果则通过 `return reject` 传递 。最终会被 OnCatchError 处理。
+
+### Client{}.Send()
 
 `xhttp.Client{}.Send()` 绑定常见请求 `query` `formUrlencoed` `form-data` `json`
  

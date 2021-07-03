@@ -7,8 +7,8 @@ type Group struct {
 	router *mux.Router
 }
 
-func (serve *Router) Group() Group {
-	return Group{
+func (serve *Router) Group() *Group {
+	return &Group{
 		serve: serve,
 		router: serve.router.PathPrefix("").Subrouter(),
 	}
