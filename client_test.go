@@ -3,6 +3,7 @@ package xhttp
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"testing"
@@ -32,6 +33,7 @@ func TestClient_SendRetry(t *testing.T) {
 			writer.WriteHeader(504)
 		case 3:
 			count1=0
+			_,_ = writer.Write([]byte("ok"))// 测试阶段全忽略
 			writer.WriteHeader(200)
 		}
 
@@ -162,5 +164,13 @@ func TestClient_SendRetry(t *testing.T) {
 		defer assert.NoError(t, bodyClose())
 		assert.Equal(t, statusCode, 200)
 		_=resp
+	}
+	{
+		resp, bodyClose, _, err := NewClient(nil).Send(context.TODO(), GET, "https://bing.com", "/", SendRequest{
+			Debug: true,
+		}) ; assert.NoError(t, err)
+		defer bodyClose()
+		d, err := ioutil.ReadAll(resp.Body) ; assert.NoError(t, err)
+		assert.NotEqual(t, len(d), 0)
 	}
 }

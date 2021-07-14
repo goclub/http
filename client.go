@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"strings"
 	"time"
@@ -52,7 +53,18 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, r
 	bodyClose = func() error { return nil }
 	var httpRequest *http.Request
 	httpRequest, err = request.HttpRequest(ctx, method, url) ; if err != nil {return}
-	return client.Do(httpRequest)
+	resp, bodyClose, statusCode, err = client.Do(httpRequest)
+	if request.Debug {
+		if resp != nil {
+			dataBytes, err :=  httputil.DumpResponse(resp, true) ; if err != nil {
+				// Debug时打印错误
+				log.Print("goclub/http: Debug: ", err)
+			}
+			log.Print("Response: ", method, " ", url, "\n", string(dataBytes))
+		}
+
+	}
+	return
 }
 
 
@@ -93,7 +105,18 @@ func (client *Client) Send(ctx context.Context, method Method, origin string, pa
 					return
 				} else {
 					if request.Debug {
-						log.Print("goclub/http Client{}.Send() " + method.String() + " " + url + "\n\tresponse statusCode("+strconv.Itoa(statusCode)+")\n\terror(" + err.Error() + ")\n\tretry(" + strconv.FormatUint(uint64(requestTimes), 10) + ")\n\ttry again in " + request.Retry.Interval.String())
+						errMsg := ""
+						if err != nil {
+							errMsg = err.Error()
+						}
+						msg := "goclub/http Client{}.Send() "+
+							method.String() +
+							" " + url +
+							"\n\tresponse statusCode("+strconv.Itoa(statusCode)+
+							")\n\terror(" + errMsg +
+							")\n\tretry(" + strconv.FormatUint(uint64(requestTimes), 10) +
+							")\n\ttry again in " + request.Retry.Interval.String()
+						log.Print(msg)
 					}
 					time.Sleep(request.Retry.Interval)
 					if request.Retry.BackupOrigin != "" {

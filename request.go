@@ -107,7 +107,7 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, url s
 		data, dumpErr := httputil.DumpRequest(httpRequest, true) ; if dumpErr != nil {
 			log.Print(dumpErr)
 		}
-		log.Print(string(data))
+		log.Print("Request:", string(data))
 	}
 	return httpRequest, nil
 }
