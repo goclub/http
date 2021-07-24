@@ -3,6 +3,7 @@ package xhttp
 import (
 	"bytes"
 	"context"
+	xjson "github.com/goclub/json"
 	"io"
 	"log"
 	"mime/multipart"
@@ -30,7 +31,7 @@ type SendRequest struct {
 	FormUrlencoded RequestFormUrlencoded
 	FormData RequestFormData
 	Header RequestHeader
-	JSON io.Reader
+	JSON interface{}
 	Body io.Reader
 	Debug bool
 	Retry RequestRetry
@@ -66,7 +67,10 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, url s
 	}
 	// json
 	if request.JSON != nil {
-		bodyReader = request.JSON
+		jsonb, err := xjson.Marshal(request.JSON) ; if err != nil {
+		    return nil, err
+		}
+		bodyReader = bytes.NewBuffer(jsonb)
 	}
 	// x-www-form-urlencoded
 	if request.FormUrlencoded != nil {
