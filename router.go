@@ -26,7 +26,7 @@ func NewRouter(opt RouterOption) *Router {
 	r := mux.NewRouter()
 	if opt.OnCatchError == nil {
 		opt.OnCatchError = func(c *Context, err error) error {
-			log.Print(err)
+			log.Printf("%+v", err)
 			debug.PrintStack()
 			c.WriteStatusCode(500)
 			return nil
@@ -34,7 +34,7 @@ func NewRouter(opt RouterOption) *Router {
 	}
 	if opt.OnCatchPanic == nil {
 		opt.OnCatchPanic = func(c *Context, recoverValue interface{}) error {
-			log.Print(recoverValue)
+			log.Printf("%+v", recoverValue)
 			debug.PrintStack()
 			c.WriteStatusCode(500)
 			return nil
