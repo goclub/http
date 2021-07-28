@@ -2,6 +2,10 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/goclub/conv v0.0.0-20210212152229-4c7944a42840 h1:XGSWD0qFbSqWso8hrJU3OBNVEyw+R3jd/tU578Yr4fk=
 github.com/goclub/conv v0.0.0-20210212152229-4c7944a42840/go.mod h1:iAu2C+UiczzPo2c9enIIzM5xeLbvpbpPw8bzmL4xt80=
+github.com/goclub/error v0.0.0-20210727101626-c0c7b12eacaa h1:ot8DuInHTTTcAMRfoBvyTDKXFistOLn7TDyd0DsfLT4=
+github.com/goclub/error v0.0.0-20210727101626-c0c7b12eacaa/go.mod h1:2ombCAL3uNuhVNevp56iOpelgiQIyxlYkz7t6nWEC18=
+github.com/goclub/error v0.0.0-20210728132129-b001d25da138 h1:hAcpXWPuEbQbhbieHI7ulvuH8bgid0w2IeuiwQiHzqg=
+github.com/goclub/error v0.0.0-20210728132129-b001d25da138/go.mod h1:2ombCAL3uNuhVNevp56iOpelgiQIyxlYkz7t6nWEC18=
 github.com/goclub/json v0.0.0-20201212033753-4350fe0a941e/go.mod h1:K7bX26XRz/QHEzyXUZNCYwN8yQsrfedeC1hhsE9HcRk=
 github.com/goclub/json v0.0.0-20201216064424-4c200d38c18f h1:xWeyqRM/ZFaZ4iE9SXcKgozxs+VrouZI/spJUax3qzI=
 github.com/goclub/json v0.0.0-20201216064424-4c200d38c18f/go.mod h1:K7bX26XRz/QHEzyXUZNCYwN8yQsrfedeC1hhsE9HcRk=
