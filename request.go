@@ -9,7 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
+	url "net/url"
 	"strings"
 	"time"
 )
@@ -21,7 +21,7 @@ type RequestFormUrlencoded interface {
 	FormUrlencoded() (url.Values, error)
 }
 type RequestFormData interface {
-	FormData(bufferData *bytes.Buffer) (*multipart.Writer, error)
+	FormData(w *multipart.Writer) (err error)
 }
 type RequestHeader interface {
 	Header() (http.Header, error)
@@ -60,36 +60,48 @@ func DefaultRequestRetryCheck (resp *http.Response, err error) (shouldRetry bool
 		}
 	}
 }
-func (request SendRequest) HttpRequest(ctx context.Context, method Method, url string) (*http.Request, error) {
+func (request SendRequest) HttpRequest(ctx context.Context, method Method, requestURL string) (httpRequest *http.Request, err error) {
 	var bodyReader io.Reader
 	if request.Body != nil {
 		bodyReader = request.Body
 	}
 	// json
 	if request.JSON != nil {
-		jsonb, err := xjson.Marshal(request.JSON) ; if err != nil {
-		    return nil, err
+		var jsonb []byte
+		jsonb, err = xjson.Marshal(request.JSON) ; if err != nil {
+		    return
 		}
 		bodyReader = bytes.NewBuffer(jsonb)
 	}
 	// x-www-form-urlencoded
 	if request.FormUrlencoded != nil {
-		values, err := request.FormUrlencoded.FormUrlencoded() ; if err != nil {return nil, err}
+		var values url.Values
+		values, err = request.FormUrlencoded.FormUrlencoded() ; if err != nil {
+			
+		}
 		bodyReader = strings.NewReader(values.Encode())
 	}
 	// form data
 	var formWriter *multipart.Writer
 	if formData := request.FormData; formData != nil {
 		bufferData := bytes.NewBuffer(nil)
-		formWriter, err := request.FormData.FormData(bufferData) ; if err != nil {return nil, err}
+		formWriter = multipart.NewWriter(bufferData)
+		err = request.FormData.FormData(formWriter) ; if err != nil {
+			return
+		}
 		err = formWriter.Close() ; if err != nil {return nil, err}
 		bodyReader = bufferData
 	}
-	httpRequest, err := http.NewRequestWithContext(ctx, method.String(), url, bodyReader) ; if err != nil {return nil, err}
+	httpRequest, err = http.NewRequestWithContext(ctx, method.String(), requestURL, bodyReader) ; if err != nil {
+		return
+	}
 	// header
 	{
 		if request.Header != nil {
-			header, err := request.Header.Header() ; if err != nil {return nil, err}
+			var header http.Header
+			header, err = request.Header.Header() ; if err != nil {
+				return
+			}
 			httpRequest.Header = header
 		}
 		if request.FormUrlencoded != nil {
@@ -104,7 +116,10 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, url s
 	}
 	// query
 	if request.Query != nil {
-		values, err := request.Query.Query() ; if err != nil {return nil, err}
+		var values = url.Values{}
+		values, err = request.Query.Query() ; if err != nil {
+			return
+		}
 		httpRequest.URL.RawQuery = values.Encode()
 	}
 	if request.Debug {

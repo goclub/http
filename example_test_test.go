@@ -1,9 +1,12 @@
 package xhttp_test
 
 import (
+	"context"
 	"errors"
 	xhttp "github.com/goclub/http"
+	"github.com/stretchr/testify/assert"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"testing"
@@ -64,6 +67,9 @@ func newTestRouter() *xhttp.Router {
 		panic("123")
 		return nil
 	})
+	router.HandleFunc(xhttp.Pattern{xhttp.POST, "/form"}, func(c *xhttp.Context) (reject error) {
+		return c.WriteBytes([]byte(c.Request.FormValue("name")))
+	})
 	return router
 }
 
@@ -83,4 +89,22 @@ func TestTest(t *testing.T) {
 
 	test.RequestJSON(xhttp.Pattern{xhttp.GET, "/error"}, nil).ExpectString(500, "error")
 	test.RequestJSON(xhttp.Pattern{xhttp.GET, "/panic"}, nil).ExpectString(500, "panic")
+	{
+		r, err := xhttp.SendRequest{
+			FormData: TestFormDataReq{
+				Name: "nimo",
+			},
+		}.HttpRequest(context.TODO(), xhttp.POST, "/form") ; assert.NoError(t, err)
+		test.Request(r).ExpectString(200, "nimo")
+	}
+
+}
+type TestFormDataReq struct {
+	Name string
+}
+func (v TestFormDataReq) FormData(formWriter *multipart.Writer) (err error) {
+	err = formWriter.WriteField("name", v.Name) ; if err != nil {
+	    return
+	}
+	return
 }
