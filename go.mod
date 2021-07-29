@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/goclub/conv v0.0.0-20210212152229-4c7944a42840
-	github.com/goclub/error v0.0.0-20210728132129-b001d25da138 // indirect
+	github.com/goclub/error v0.0.0-20210728132129-b001d25da138
 	github.com/goclub/json v0.0.0-20201216064424-4c200d38c18f
 	github.com/goclub/reflect v0.0.0-20201224025738-7f37ac2827fc
 	github.com/goclub/time v0.0.0-20210216123546-3bdf423eb95f

@@ -240,7 +240,6 @@ func main() {
 
 	*/
 	addr := ":1111"
-	r.LogPatterns(addr)
 	server := &http.Server{
 		Addr:  addr,
 		Handler:  r,
@@ -249,6 +248,7 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
+	r.LogPatterns(server)
 	log.Print("http://localhost" + addr)
 	// 如果需要使用 https 证书 则通过 server.ListenAndServeTLS() 启动服务
 	// 或者在 cdn 环节部署 https

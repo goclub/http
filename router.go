@@ -47,7 +47,8 @@ func NewRouter(opt RouterOption) *Router {
 	}
 }
 
-func (router Router) LogPatterns(addr string) {
+func (router Router) LogPatterns(server *http.Server) {
+	addr := server.Addr
 	var messages []string
 	messages = append(messages, "Listen http://localhost" + addr)
 	for _, pattern := range router.patterns {

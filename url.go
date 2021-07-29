@@ -20,3 +20,9 @@ type Pattern struct {
 	Method Method
 	Path string
 }
+func (pattern Pattern) mockID () string {
+	return pattern.Method.String() + " " + pattern.Path
+}
+func (p Pattern) Equal(target Pattern) bool {
+	return p.Method == target.Method && p.Path == target.Path
+}

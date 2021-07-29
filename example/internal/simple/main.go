@@ -35,11 +35,11 @@ func main () {
 	ResponseTemplate(router)
 	GetSetCookie(router)
 	addr := ":3000"
-	serve := http.Server{
+	serve := &http.Server{
 		Handler: router,
 		Addr: addr,
 	}
-	router.LogPatterns(addr)
+	router.LogPatterns(serve)
 	go func() {
 		listenErr := serve.ListenAndServe() ; if listenErr !=nil {
 			if listenErr != http.ErrServerClosed {
