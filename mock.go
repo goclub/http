@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"sync"
 )
 
 type MockServer struct {
@@ -17,17 +18,19 @@ type MockServer struct {
 	option MockServerOption
 }
 type mockDatabase struct {
+	sync.Mutex
+	count map[string]int64
 	replyKey map[string]string
 	scene string
 }
 type MockServerOption struct {
 	DefaultReply map[string]interface{}
-	RequestCheck func (c *Context, pattern Pattern, reqPtr interface{}) (pass bool, err error)
 }
 func NewMockServer(option MockServerOption) MockServer {
 	server := MockServer{
 		option: option,
 		db: mockDatabase{
+			count: map[string]int64{},
 			replyKey: map[string]string{},
 		},
 		router: NewRouter(RouterOption{}),
@@ -65,11 +68,18 @@ func (m MockServer) systemHandle() {
 }
 type Mock struct {
 	Pattern Pattern
-	Request func() interface{}
-	Reply map[string]interface{}
-	Match func(c *Context) (key string)
+	Request MockRequest
+	Reply MockReply
+	Match func(c *Context) (replyKey string)
+	Render string
+	MaxAutoCount int64
 }
+type MockRequest map[string]interface{}
+type MockReply map[string]interface{}
 func (ms MockServer) URL(mock Mock) {
+	if mock.MaxAutoCount == 0 {
+		mock.MaxAutoCount = 5
+	}
 	reply:= map[string]interface{}{}
 	for replyKey, replyValue := range ms.option.DefaultReply {
 		reply[replyKey] = replyValue
@@ -78,15 +88,23 @@ func (ms MockServer) URL(mock Mock) {
 		reply[replyKey] = replyValue
 	}
 	ms.router.HandleFunc(mock.Pattern, func(c *Context) (err error) {
-		if ms.option.RequestCheck != nil && mock.Request != nil {
-			var pass bool
-			pass, err = ms.option.RequestCheck(c, mock.Pattern, mock.Request())  ; if err != nil {
-			    return
+		// _count
+		query := c.Request.URL.Query()
+		queryCount := query.Get("_count")
+		if queryCount == "" {
+			ms.db.Lock()
+			countKey := mock.Pattern.mockID() + " " + query.Get("_scene")
+			dbCount := ms.db.count[countKey]
+			dbCount++
+			if dbCount > mock.MaxAutoCount {
+				dbCount = 1
 			}
-			if pass == false {
-				return
-			}
+			ms.db.count[countKey]= dbCount
+			query.Set("_count", strconv.FormatInt(dbCount, 10))
+			c.Request.URL.RawQuery = query.Encode()
+			ms.db.Unlock()
 		}
+
 		var replyKey string
 
 		replyKeyValues :=  reflect.ValueOf(reply).MapKeys()
@@ -147,19 +165,23 @@ func (server MockServer) currentReplyKey(c *Context, pattern Pattern, match func
 	return
 }
 
-func MockMatchCount(c *Context, routers map[string]string) (key string) {
+func MockMatchCount(c *Context, counts map[string]string) (key string) {
 	return MockMatchSceneCount(c, map[string]map[string]string{
-		"": routers,
+		"": counts,
 	})
 }
-func MockMatchSceneCount(c *Context, routers map[string]map[string]string) (key string) {
+func MockMatchSceneCount(c *Context, routers map[string]map[string]string) (replyKey string) {
+	count := c.Request.URL.Query().Get("_count")
 	scene := c.Request.URL.Query().Get("_scene")
+	defer func() {
+		log.Printf("MockMatch: _scene(%s) _count(%s) replyKey(%s)", scene, count, replyKey)
+	}()
 	sceneData ,hasSceneData := routers[scene]
 	if hasSceneData == false {
 		return
 	}
 	var hasKey bool
-	key, hasKey = sceneData[c.Request.URL.Query().Get("_count")]
+	replyKey, hasKey = sceneData[count]
 	if hasKey == false {
 		return
 	}

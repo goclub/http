@@ -30,25 +30,6 @@ type AuditReply struct {
 
 func main() {
 	ms := xhttp.NewMockServer(xhttp.MockServerOption{
-		RequestCheck: func(c *xhttp.Context, pattern xhttp.Pattern, reqPtr interface{}) (pass bool, err error) {
-			if pattern.Equal(xhttp.Pattern{xhttp.GET, "/news"}) {
-				err = c.BindRequest(reqPtr) ; if err != nil {
-				    return
-				}
-				if newsRequest, ok := reqPtr.(*NewsRequest); ok {
-					if newsRequest.NewsID == 0 {
-						return false, c.WriteJSON(xerr.Resp{
-							Error: xerr.RespError{
-								Code:  1,
-								Message: "missing query newsID",
-							},
-						})
-					}
-				}
-				return true ,nil
-			}
-			return true, nil
-		},
 		DefaultReply: map[string]interface{}{
 			"pass": xerr.Resp{},
 			"fail": xerr.Resp{
@@ -62,10 +43,12 @@ func main() {
 	defer ms.Listen(3422)
 	ms.URL(xhttp.Mock{
 		Pattern:  xhttp.Pattern{xhttp.GET, "/news"},
-		Request: func() interface{} {
-			return &NewsRequest{}
+		Request: xhttp.MockRequest{
+			"main": NewsRequest{
+				NewsID: 1,
+			},
 		},
-		Reply: map[string]interface{}{
+		Reply: xhttp.MockReply{
 			"pass": NewsReply{
 				Title: "goclub/http 发布 mock 功能",
 				Context:  "全新版本,全新体验,解放前端",
@@ -80,12 +63,12 @@ func main() {
 	})
 	ms.URL(xhttp.Mock{
 		Pattern:  xhttp.Pattern{xhttp.GET, "/audit/status"},
-		Request: func() interface{} {
-			return &AuditRequest{}
+		Request: xhttp.MockRequest{
+			"main": AuditReply{},
 		},
 		Match: func(c *xhttp.Context) (key string) {
 			return xhttp.MockMatchSceneCount(c, map[string]map[string]string{
-				"finalDone": {
+				"": {
 					"1": "queue",
 					"2": "pass",
 				},
@@ -95,7 +78,7 @@ func main() {
 				},
 			})
 		},
-		Reply: map[string]interface{}{
+		Reply: xhttp.MockReply{
 			"pass": AuditReply{
 				Status: EnumAuditStatusDone,
 			},
