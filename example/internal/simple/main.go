@@ -65,10 +65,10 @@ func NewRouter() *xhttp.Router {
 
 // 打开 http://127.0.0.1:3000/request/query?name=nimoc&age=18
 func RequestBindQuery(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/request/query",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `query:"name"`
 			Age int `query:"age"`
@@ -80,10 +80,10 @@ func RequestBindQuery(router *xhttp.Router) {
 }
 
 func RequestBindFormUrlencoded(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.POST, "/request/form_urlencoded",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `form:"name"`
 			Age int `form:"age"`
@@ -100,10 +100,10 @@ curl --location --request POST 'http://127.0.0.1:3000/request/form_data' \
 --form 'age="18"'
 */
 func RequestBindFormData(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.POST, "/request/form_data",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `form:"name"`
 			Age int `form:"age"`
@@ -123,10 +123,10 @@ curl --location --request GET 'http://127.0.0.1:3000/request/json' \
 }'
 */
 func RequestBindJSON(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/request/json",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `json:"name"`
 			Age int `json:"age"`
@@ -147,10 +147,10 @@ curl --location --request GET 'http://127.0.0.1:3000/request/query_and_json?id=1
 }'
 */
 func RequestBindQueryAndJSON(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/request/query_and_json",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			ID string `query:"id"`
 			Name string `json:"name"`
@@ -164,10 +164,10 @@ func RequestBindQueryAndJSON(router *xhttp.Router) {
 
 // http://127.0.0.1:3000/request/param/11
 func RequestBindParam(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/request/param/{userID}",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			UserID string `param:"userID"`
 		}{}
@@ -177,10 +177,10 @@ func RequestBindParam(router *xhttp.Router) {
 	})
 }
 func RenderFormFile(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/request/file",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		html := []byte(`
 		<form action="/request/file" method="post" enctype="multipart/form-data" >
 　　　		<input type="file" name="file" /> <br />
@@ -194,10 +194,10 @@ func RenderFormFile(router *xhttp.Router) {
 }
 // 打开 http://127.0.0.1:3000/request/file 上传文件
 func RequestFile(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.POST, "/request/file",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		file, fileHeader, err := c.Request.FormFile("file") ; if err != nil {return}
 		defer file.Close()
 		data, err := ioutil.ReadAll(file) ; if err != nil {return}
@@ -206,26 +206,26 @@ func RequestFile(router *xhttp.Router) {
 	})
 }
 func RequestTraceID(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/request/trace_id",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (reject error) {
 		return c.WriteBytes([]byte(fmt.Sprintf("traceID: %s", c.RequestContext().Value(traceID("traceID")))))
 	})
 }
 func ResponseWriteBytes(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/response/WriteBytes",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		return c.WriteBytes([]byte("goclub"))
 	})
 }
 func ResponseHTML(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/response/html",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		return c.Render(func(buffer *bytes.Buffer) error {
 			buffer.WriteString(`<a href="http://github.com/goclub">goclub</a>`)
 			return nil
@@ -234,10 +234,10 @@ func ResponseHTML(router *xhttp.Router) {
 }
 var responseTPL =  template.Must(template.New("").Parse("name {{.Name}}"))
 func ResponseTemplate(router *xhttp.Router) {
-	pattern := xhttp.Pattern{
+	route := xhttp.Route{
 		xhttp.GET, "/response/template",
 	}
-	router.HandleFunc(pattern, func(c *xhttp.Context) (err error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		return c.Render(func(buffer *bytes.Buffer) error {
 			data := struct {
 				Name string
@@ -248,7 +248,7 @@ func ResponseTemplate(router *xhttp.Router) {
 }
 
 func GetSetCookie(router *xhttp.Router) {
-	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (reject error) {
 		query := c.Request.URL.Query()
 		switch query.Get("kind") {
 		case "get":

@@ -13,7 +13,7 @@ type Router struct {
 	router *mux.Router
 	OnCatchError func(c *Context, err error) error
 	OnCatchPanic func(c *Context, recoverValue interface{}) error
-	patterns []Pattern
+	patterns []Route
 }
 type RouterOption struct {
 	OnCatchError func(c *Context, err error) error
@@ -51,13 +51,13 @@ func (router Router) LogPatterns(server *http.Server) {
 	addr := server.Addr
 	var messages []string
 	messages = append(messages, "Listen http://localhost" + addr)
-	for _, pattern := range router.patterns {
-		method := fmt.Sprintf("%-13s", pattern.Method.String())
-		url := "http://localhost" + addr + pattern.Path
-		if pattern.Method == GET {
+	for _, route := range router.patterns {
+		method := fmt.Sprintf("%-13s", route.Method.String())
+		url := "http://localhost" + addr + route.Path
+		if route.Method == GET {
 			messages = append(messages,  method + " " + url)
 		} else {
-			messages = append(messages,  `curl -X ` + pattern.Method.String() + ` '`+ url +`' --header 'Content-Type: application/json' --data-raw '{}'`)
+			messages = append(messages,  `curl -X ` + route.Method.String() + ` '`+ url +`' --header 'Content-Type: application/json' --data-raw '{}'`)
 		}
 	}
 	log.Print("\n" + strings.Join(messages, "\n"))

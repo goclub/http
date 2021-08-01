@@ -16,13 +16,13 @@ const OPTIONS Method = "OPTIONS"
 const TRACE Method = "TRACE"
 const PATCH Method = "PATCH"
 
-type Pattern struct {
+type Route struct {
 	Method Method
 	Path string
 }
-func (pattern Pattern) mockID () string {
-	return pattern.Method.String() + " " + pattern.Path
+func (route Route) ID () string {
+	return route.Method.String() + " " + route.Path
 }
-func (p Pattern) Equal(target Pattern) bool {
+func (p Route) Equal(target Route) bool {
 	return p.Method == target.Method && p.Path == target.Path
 }

@@ -42,7 +42,7 @@ func main() {
 	})
 	defer ms.Listen(3422)
 	ms.URL(xhttp.Mock{
-		Pattern:  xhttp.Pattern{xhttp.GET, "/news"},
+		Route:  xhttp.Route{xhttp.GET, "/news"},
 		Request: xhttp.MockRequest{
 			"main": NewsRequest{
 				NewsID: 1,
@@ -62,7 +62,7 @@ func main() {
 		},
 	})
 	ms.URL(xhttp.Mock{
-		Pattern:  xhttp.Pattern{xhttp.GET, "/audit/status"},
+		Route:  xhttp.Route{xhttp.GET, "/audit/status"},
 		Request: xhttp.MockRequest{
 			"main": AuditReply{},
 		},
@@ -71,15 +71,18 @@ func main() {
 				"": {
 					"1": "queue",
 					"2": "pass",
+					"": "pass",
 				},
 				"finalReject": {
 					"1": "queue",
 					"2": "reject",
+					"": "reject",
 				},
 			})
 		},
+		DisableDefaultReply: "pass",
 		Reply: xhttp.MockReply{
-			"pass": AuditReply{
+			"done": AuditReply{
 				Status: EnumAuditStatusDone,
 			},
 			"reject": AuditReply{

@@ -33,7 +33,7 @@ func newTestRouter() *xhttp.Router {
 			return c.WriteBytes([]byte("panic"))
 		},
 	})
-	router.HandleFunc(xhttp.Pattern{xhttp.POST, "/"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.POST, "/"}, func(c *xhttp.Context) (reject error) {
 		request :=  RequestHome{}
 		reject = c.BindRequest(&request) ; if reject != nil {
 		    return
@@ -42,7 +42,7 @@ func newTestRouter() *xhttp.Router {
 		reply.IDNameAge  = request.ID + ":" + request.Name + ":" + strconv.FormatInt(int64(request.Age), 10)
 		return c.WriteJSON(reply)
 	})
-	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/count"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/count"}, func(c *xhttp.Context) (reject error) {
 		cookieName := "count"
 		var count uint64
 		cookie, hasCookie, reject := c.Cookie(cookieName) ; if reject != nil {
@@ -60,14 +60,14 @@ func newTestRouter() *xhttp.Router {
 		})
 		return c.WriteBytes([]byte(strconv.FormatUint(count, 10)))
 	})
-	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/error"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/error"}, func(c *xhttp.Context) (reject error) {
 		return errors.New("abc")
 	})
-	router.HandleFunc(xhttp.Pattern{xhttp.GET, "/panic"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/panic"}, func(c *xhttp.Context) (reject error) {
 		panic("123")
 		return nil
 	})
-	router.HandleFunc(xhttp.Pattern{xhttp.POST, "/form"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.POST, "/form"}, func(c *xhttp.Context) (reject error) {
 		return c.WriteBytes([]byte(c.Request.FormValue("name")))
 	})
 	return router
@@ -76,19 +76,19 @@ func newTestRouter() *xhttp.Router {
 func TestTest(t *testing.T) {
 	router := newTestRouter()
 	test := xhttp.NewTest(t, router)
-	test.RequestJSON(xhttp.Pattern{xhttp.POST, "/"}, RequestHome{
+	test.RequestJSON(xhttp.Route{xhttp.POST, "/"}, RequestHome{
 		ID:   "1",
 		Name: "nimo",
 		Age:  18,
 	}).ExpectJSON(200, ReplyHome{IDNameAge:"1:nimo:18"})
 
-	test.RequestJSON(xhttp.Pattern{xhttp.GET, "/count"}, nil).ExpectString(200, "1")
+	test.RequestJSON(xhttp.Route{xhttp.GET, "/count"}, nil).ExpectString(200, "1")
 
-	test.RequestJSON(xhttp.Pattern{xhttp.GET, "/count"}, nil).ExpectString(200, "2")
-	test.RequestJSON(xhttp.Pattern{xhttp.POST, "/count"}, nil).ExpectString(405, "")
+	test.RequestJSON(xhttp.Route{xhttp.GET, "/count"}, nil).ExpectString(200, "2")
+	test.RequestJSON(xhttp.Route{xhttp.POST, "/count"}, nil).ExpectString(405, "")
 
-	test.RequestJSON(xhttp.Pattern{xhttp.GET, "/error"}, nil).ExpectString(500, "error")
-	test.RequestJSON(xhttp.Pattern{xhttp.GET, "/panic"}, nil).ExpectString(500, "panic")
+	test.RequestJSON(xhttp.Route{xhttp.GET, "/error"}, nil).ExpectString(500, "error")
+	test.RequestJSON(xhttp.Route{xhttp.GET, "/panic"}, nil).ExpectString(500, "panic")
 	{
 		r, err := xhttp.SendRequest{
 			FormData: TestFormDataReq{

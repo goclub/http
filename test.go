@@ -24,13 +24,13 @@ func NewTest(t *testing.T, router *Router) Test {
 		jar: jar,
 	}
 }
-func (test Test) RequestJSON(pattern Pattern, jsonValue interface{}) (resp *Response)  {
-	request := testNewRequestJSON(pattern, jsonValue)
+func (test Test) RequestJSON(route Route, jsonValue interface{}) (resp *Response)  {
+	request := testNewRequestJSON(route, jsonValue)
 	return test.Request(request)
 }
-func testNewRequestJSON(pattern Pattern, jsonValue interface{}) *http.Request {
+func testNewRequestJSON(route Route, jsonValue interface{}) *http.Request {
 	data, err := xjson.Marshal(jsonValue) ; testHandleError(err)
-	request := httptest.NewRequest(pattern.Method.String(), pattern.Path, bytes.NewReader(data))
+	request := httptest.NewRequest(route.Method.String(), route.Path, bytes.NewReader(data))
 	request.Header.Set("Content-Type", "application/json")
 	return request
 }

@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -48,7 +49,7 @@ func (m MockServer) systemHandle() {
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "false")
 		return next()
 	})
-	m.router.HandleFunc(Pattern{GET, "/mock"}, func(c *Context) (err error) {
+	m.router.HandleFunc(Route{GET, "/mock"}, func(c *Context) (err error) {
 		req := struct {
 			Scene string `query:"scene"`
 		}{}
@@ -67,12 +68,12 @@ func (m MockServer) systemHandle() {
 	})
 }
 type Mock struct {
-	Pattern Pattern
-	Request MockRequest
-	Reply MockReply
-	Match func(c *Context) (replyKey string)
-	Render string
-	MaxAutoCount int64
+	Route Route `note:"路由"`
+	Request MockRequest `note:"请求"`
+	DisableDefaultReply string `note:"指定禁用默认响应的key"`
+	Reply MockReply `note:"响应"`
+	Match func(c *Context) (replyKey string) `note:"根据请求参数决定响应结果"`
+	MaxAutoCount int64 `note:"最大计数,默认5"`
 }
 type MockRequest map[string]interface{}
 type MockReply map[string]interface{}
@@ -82,18 +83,25 @@ func (ms MockServer) URL(mock Mock) {
 	}
 	reply:= map[string]interface{}{}
 	for replyKey, replyValue := range ms.option.DefaultReply {
+		if mock.DisableDefaultReply != "" {
+			for _, disableDefaultReply := range strings.Split(mock.DisableDefaultReply, "|") {
+				if replyKey == disableDefaultReply {
+					continue
+				}
+			}
+		}
 		reply[replyKey] = replyValue
 	}
 	for replyKey, replyValue := range mock.Reply {
 		reply[replyKey] = replyValue
 	}
-	ms.router.HandleFunc(mock.Pattern, func(c *Context) (err error) {
+	ms.router.HandleFunc(mock.Route, func(c *Context) (err error) {
 		// _count
 		query := c.Request.URL.Query()
 		queryCount := query.Get("_count")
 		if queryCount == "" {
 			ms.db.Lock()
-			countKey := mock.Pattern.mockID() + " " + query.Get("_scene")
+			countKey := mock.Route.ID() + " " + query.Get("_scene")
 			dbCount := ms.db.count[countKey]
 			dbCount++
 			if dbCount > mock.MaxAutoCount {
@@ -124,7 +132,7 @@ func (ms MockServer) URL(mock Mock) {
 				replyKey = key
 			}
 		}
-		currentReplyKey := ms.currentReplyKey(c, mock.Pattern, mock.Match)
+		currentReplyKey := ms.currentReplyKey(c, mock.Route, mock.Match)
 		if currentReplyKey != "" {
 			replyKey = currentReplyKey
 		}
@@ -140,9 +148,9 @@ func (ms MockServer) URL(mock Mock) {
 	})
 }
 
-func (server MockServer) currentReplyKey(c *Context, pattern Pattern, match func(*Context) (string)) (replyKey string){
+func (server MockServer) currentReplyKey(c *Context, route Route, match func(*Context) (string)) (replyKey string){
 	// database
-	dbReplyKey,hasDBReplyKey := server.db.replyKey[pattern.mockID()]
+	dbReplyKey,hasDBReplyKey := server.db.replyKey[route.ID()]
 	if hasDBReplyKey {
 		replyKey = 	dbReplyKey
 	}
@@ -178,14 +186,19 @@ func MockMatchSceneCount(c *Context, routers map[string]map[string]string) (repl
 	}()
 	sceneData ,hasSceneData := routers[scene]
 	if hasSceneData == false {
-		return
+		return ""
 	}
 	var hasKey bool
 	replyKey, hasKey = sceneData[count]
+	defaultReplyKey, hasDefaultReplyKey := sceneData[""]
 	if hasKey == false {
-		return
+		if hasDefaultReplyKey {
+			return defaultReplyKey
+		} else {
+			return ""
+		}
 	}
-	return
+	return replyKey
 }
 func (server MockServer) Listen(port int) {
 	s := &http.Server{
