@@ -31,14 +31,14 @@ func coreHandleFunc(serve *Router, router *mux.Router, route Route,  handler Han
 	}).Methods(route.Method.String())
 }
 
-func (serve *Router) Handle(route Route, handler http.Handler) {
-	coreHandle(serve, serve.router, route, handler)
+func (serve *Router) Handle(path string, handler http.Handler) {
+	coreHandle(serve, serve.router, path, handler)
 }
-func (group *Group) Handle(route Route,handler http.Handler) {
-	coreHandle(group.serve, group.router, route, handler)
+func (group *Group) Handle(path string,handler http.Handler) {
+	coreHandle(group.serve, group.router, path, handler)
 }
 
-func coreHandle(serve *Router, router *mux.Router, route Route,  handler http.Handler) {
-	serve.patterns = append(serve.patterns, route)
-	router.Handle(route.Path, handler).Methods(route.Method.String())
+func coreHandle(serve *Router, router *mux.Router, path string,  handler http.Handler) {
+	serve.patterns = append(serve.patterns, Route{"*", path})
+	router.Handle(path, handler)
 }
