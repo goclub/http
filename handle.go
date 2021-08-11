@@ -10,6 +10,9 @@ type HandleFunc func(c *Context) (err error)
 func (serve *Router) HandleFunc(route Route, handler HandleFunc) {
 	coreHandleFunc(serve, serve.router, route, handler)
 }
+func (group *Group) HandleFunc(route Route,handler HandleFunc) {
+	coreHandleFunc(group.serve, group.router, route, handler)
+}
 
 func coreHandleFunc(serve *Router, router *mux.Router, route Route,  handler HandleFunc) {
 	serve.patterns = append(serve.patterns, route)
@@ -28,6 +31,14 @@ func coreHandleFunc(serve *Router, router *mux.Router, route Route,  handler Han
 	}).Methods(route.Method.String())
 }
 
-func (group *Group) HandleFunc(route Route,action HandleFunc) {
-	coreHandleFunc(group.serve, group.router, route, action)
+func (serve *Router) Handle(route Route, handler http.Handler) {
+	coreHandle(serve, serve.router, route, handler)
+}
+func (group *Group) Handle(route Route,handler http.Handler) {
+	coreHandle(group.serve, group.router, route, handler)
+}
+
+func coreHandle(serve *Router, router *mux.Router, route Route,  handler http.Handler) {
+	serve.patterns = append(serve.patterns, route)
+	router.Handle(route.Path, handler).Methods(route.Method.String())
 }
