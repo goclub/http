@@ -63,6 +63,6 @@ func (router Router) LogPatterns(server *http.Server) {
 	log.Print("\n" + strings.Join(messages, "\n"))
 }
 
-func (router Router) Static(rootPath string, handler http.Handler) {
-	router.router.PathPrefix(rootPath).Handler(http.StripPrefix(rootPath, handler))
+func (router Router) Static(rootPath string, dir string) {
+	router.router.PathPrefix(rootPath).Handler(http.StripPrefix("/public", http.FileServer(http.Dir(dir))))
 }

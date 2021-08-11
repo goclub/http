@@ -183,9 +183,9 @@ func main() {
 
 	// 请求验证由 goclub/validator 实现， 注意数据验证应当在业务逻辑层(biz/service)验证，而不是协议层(http/rpc)验证
 	// 静态资源
-	dir := path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/static")
+	dir := path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public")
 	log.Print(dir)
-	r.Static("/static", http.StripPrefix("/", http.FileServer(http.Dir(dir))))
+	r.Static("/public", dir)
 	// 返回第三方获取的数据 goclub/http 单独提供了一些函数来支持
 	// https://pkg.go.dev/github.com/goclub/http#example-Client.Send
 	// https://pkg.go.dev/github.com/goclub/http#example-Client.Do
