@@ -64,5 +64,5 @@ func (router Router) LogPatterns(server *http.Server) {
 }
 
 func (router Router) Static(rootPath string, dir string) {
-	router.router.PathPrefix(rootPath).Handler(http.StripPrefix("/public", http.FileServer(http.Dir(dir))))
+	router.router.PathPrefix(rootPath).Handler(http.StripPrefix(rootPath, http.FileServer(http.Dir(dir))))
 }
