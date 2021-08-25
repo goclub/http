@@ -9,16 +9,15 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
-	url "net/url"
 	"strings"
 	"time"
 )
 
 type RequestQuery interface {
-	Query() (url.Values, error)
+	Query() (string, error)
 }
 type RequestFormUrlencoded interface {
-	FormUrlencoded() (url.Values, error)
+	FormUrlencoded() (string, error)
 }
 type RequestFormData interface {
 	FormData(w *multipart.Writer) (err error)
@@ -75,11 +74,11 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, reque
 	}
 	// x-www-form-urlencoded
 	if request.FormUrlencoded != nil {
-		var values url.Values
-		values, err = request.FormUrlencoded.FormUrlencoded() ; if err != nil {
-			
+		var formUrlencoded string
+		formUrlencoded, err = request.FormUrlencoded.FormUrlencoded() ; if err != nil {
+			return
 		}
-		bodyReader = strings.NewReader(values.Encode())
+		bodyReader = strings.NewReader(formUrlencoded)
 	}
 	// form data
 	var formWriter *multipart.Writer
@@ -116,11 +115,11 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, reque
 	}
 	// query
 	if request.Query != nil {
-		var values = url.Values{}
-		values, err = request.Query.Query() ; if err != nil {
+		var queryValue string
+		queryValue, err = request.Query.Query() ; if err != nil {
 			return
 		}
-		httpRequest.URL.RawQuery = values.Encode()
+		httpRequest.URL.RawQuery = queryValue
 	}
 	if request.Debug {
 		data, dumpErr := httputil.DumpRequest(httpRequest, true) ; if dumpErr != nil {
