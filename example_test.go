@@ -11,8 +11,8 @@ import (
 )
 
 func TestExample(t *testing.T) {
-	ExampleClient_Do()
-	ExampleClient_Send()
+	// ExampleClient_Do()
+	// ExampleClient_Send()
 }
 // net/http 的 &http.Client{}.Do() 函数只返回了  resp, err
 // 实际上我们一定要记得 resp.Body.Close() ,但是 resp 可能是个 nil ，此时 运行 resp.Body.Close() 会出现空指针错误

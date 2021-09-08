@@ -62,7 +62,11 @@ func (router Router) LogPatterns(server *http.Server) {
 	}
 	log.Print("\n" + strings.Join(messages, "\n"))
 }
-
-func (router Router) Static(rootPath string, dir string) {
+// example:
+// dir := path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public")
+// defer r.MustUseDeferStatic("/", dir)
+// or
+// defer r.MustUseDeferStatic("/public", dir)
+func (router Router) MustUseDeferStatic(rootPath string, dir string) {
 	router.router.PathPrefix(rootPath).Handler(http.StripPrefix(rootPath, http.FileServer(http.Dir(dir))))
 }
