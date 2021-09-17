@@ -2,6 +2,7 @@ package xhttp
 
 import (
 	xconv "github.com/goclub/conv"
+	xerr "github.com/goclub/error"
 	xjson "github.com/goclub/json"
 	xreflect "github.com/goclub/reflect"
 	"github.com/gorilla/mux"
@@ -61,9 +62,8 @@ func BindRequest(ptr interface{}, r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		err = xjson.Unmarshal(jsonb, ptr)
-		if err != nil {
-			return err
+		err = xjson.Unmarshal(jsonb, ptr) ; if err != nil {
+			return xerr.WithStack(err)
 		}
 	default:
 	}
