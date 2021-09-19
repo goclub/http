@@ -1,8 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"github.com/CloudyKit/jet/v6"
 	xerr "github.com/goclub/error"
 	xhttp "github.com/goclub/http"
+	xjson "github.com/goclub/json"
+	"net/http"
+	"os"
+	"path"
+	"reflect"
 )
 
 type NewsRequest struct {
@@ -28,6 +35,38 @@ type AuditReply struct {
 	xerr.Resp
 }
 
+var view *jet.Set
+
+func init (){
+	loader := jet.NewOSFileSystemLoader(path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/mock"))
+	opts := []jet.Option{}
+	opts = append(opts, jet.InDevelopmentMode())
+	opts = append(opts, jet.WithDelims("[[", "]]"))
+	view = jet.NewSet(
+		loader,
+		opts...
+	)
+	view.AddGlobalFunc("xjson", func(a jet.Arguments) reflect.Value {
+		v := a.Get(0).Interface()
+		buffer := bytes.NewBuffer(nil)
+		err := xjson.NewEncoder(buffer).Encode(v) ; if err != nil {
+			return reflect.ValueOf("encode json fail")
+		}
+		return reflect.ValueOf(buffer.Bytes())
+	})
+}
+
+type TemplateRender struct {
+
+}
+
+func (tr TemplateRender) Render(templatePath string, data interface{}, w http.ResponseWriter) (err error) {
+	t, err := view.GetTemplate(templatePath) ; if err != nil {
+	    return
+	}
+	return t.Execute(w, nil, data)
+}
+
 func main() {
 	ms := xhttp.NewMockServer(xhttp.MockServerOption{
 		DefaultReply: map[string]interface{}{
@@ -39,6 +78,7 @@ func main() {
 				},
 			},
 		},
+		Render: TemplateRender{},
 	})
 	defer ms.Listen(3422)
 	ms.URL(xhttp.Mock{
@@ -94,4 +134,20 @@ func main() {
 			},
 		},
 	})
+	ms.URL(xhttp.Mock{
+		Route:               xhttp.Route{xhttp.GET, "/handleFunc"},
+		HandleFunc: func(c *xhttp.Context) error {
+			return c.WriteJSON("handleFunc")
+		},
+	})
+	ms.URL(xhttp.Mock{
+		Route:               xhttp.Route{xhttp.GET, "/render"},
+		Reply: xhttp.MockReply{
+			"pass": map[string]interface{}{
+				"name": "nimo",
+			},
+		},
+		Render: "./page.html",
+	})
+
 }

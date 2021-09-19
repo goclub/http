@@ -26,6 +26,10 @@ type mockDatabase struct {
 }
 type MockServerOption struct {
 	DefaultReply map[string]interface{}
+	Render MockRender
+}
+type MockRender interface {
+	Render(templatePath string, data interface{}, w http.ResponseWriter) error
 }
 func NewMockServer(option MockServerOption) MockServer {
 	server := MockServer{
@@ -74,6 +78,8 @@ type Mock struct {
 	Reply MockReply `note:"响应"`
 	Match func(c *Context) (replyKey string) `note:"根据请求参数决定响应结果"`
 	MaxAutoCount int64 `note:"最大计数,默认5"`
+	HandleFunc func (c *Context) error
+	Render string
 }
 type MockRequest map[string]interface{}
 type MockReply map[string]interface{}
@@ -96,6 +102,10 @@ func (ms MockServer) URL(mock Mock) {
 		reply[replyKey] = replyValue
 	}
 	ms.router.HandleFunc(mock.Route, func(c *Context) (err error) {
+		if mock.HandleFunc != nil {
+			mock.HandleFunc(c)
+			return
+		}
 		// _count
 		query := c.Request.URL.Query()
 		queryCount := query.Get("_count")
@@ -144,6 +154,10 @@ func (ms MockServer) URL(mock Mock) {
 			}
 			return c.WriteBytes([]byte(fmt.Sprintf("reply:%s\ncan not found key: %s", replyBytes, replyKey)))
 		}
+		if mock.Render != "" {
+			return ms.option.Render.Render(mock.Render, response, c.Writer)
+		}
+
 		return c.WriteJSON(response)
 	})
 }

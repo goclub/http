@@ -76,3 +76,7 @@ func (router Router) FileServer(prefix string, dir string) {
 	router.router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(dir))))
 }
 
+func (router Router) PrefixHandler(prefix string, handler http.Handler) {
+	router.router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, handler))
+}
+
