@@ -2,6 +2,7 @@ package xhttp
 
 import (
 	"fmt"
+	xerr "github.com/goclub/error"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -64,9 +65,14 @@ func (router Router) LogPatterns(server *http.Server) {
 }
 // example:
 // dir := path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public")
-// defer r.MustUseDeferStatic("/", dir)
-// or
-// defer r.MustUseDeferStatic("/public", dir)
-func (router Router) MustUseDeferStatic(rootPath string, dir string) {
-	router.router.PathPrefix(rootPath).Handler(http.StripPrefix(rootPath, http.FileServer(http.Dir(dir))))
+// defer r.FileServer("/public", dir)
+func (router Router) FileServer(prefix string, dir string) {
+	if strings.HasPrefix("internal", dir) {
+		panic(xerr.New("xhttp.Router{}.Static(prefix, dir) prefix maybe contains golang code"))
+	}
+	if prefix == "/" {
+		panic(xerr.New("xhttp.Router{}.Static(prefix, dir) prefix can not be /, is unsafe"))
+	}
+	router.router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(dir))))
 }
+

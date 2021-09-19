@@ -30,6 +30,9 @@ func main() {
 			return nil
 		},
 	})
+	// 静态资源
+
+	r.FileServer("/public", path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public"))
 	r.HandleFunc(xhttp.Route{xhttp.GET, "/user/{name}"}, func(c *xhttp.Context) (reject error) {
 		name, reject := c.Param("name") ; if reject != nil {
 			return
@@ -182,9 +185,6 @@ func main() {
 	// 绑定 xml 使用 xjson.NewDecoder(c.Request.Body).Decode(&data) 科技
 
 	// 请求验证由 goclub/validator 实现， 注意数据验证应当在业务逻辑层(biz/service)验证，而不是协议层(http/rpc)验证
-	// 静态资源
-	dir := path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public")
-	defer r.MustUseDeferStatic("/", dir)
 	// 返回第三方获取的数据 goclub/http 单独提供了一些函数来支持
 	// https://pkg.go.dev/github.com/goclub/http#example-Client.Send
 	// https://pkg.go.dev/github.com/goclub/http#example-Client.Do
