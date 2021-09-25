@@ -32,7 +32,7 @@ func main() {
 	})
 	// 静态资源
 
-	r.FileServer("/public", path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public"))
+	r.FileServer("/public", path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public"), true)
 	r.HandleFunc(xhttp.Route{xhttp.GET, "/user/{name}"}, func(c *xhttp.Context) (reject error) {
 		name, reject := c.Param("name") ; if reject != nil {
 			return
