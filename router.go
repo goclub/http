@@ -75,17 +75,17 @@ func (router Router) FileServer(prefix string, dir string, noCache bool) {
 	if prefix == "/" {
 		panic(xerr.New("xhttp.Router{}.Static(prefix, dir) prefix can not be /, is unsafe"))
 	}
-	router.router.PathPrefix(prefix).Handler(fileServer{
+	router.router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, fileServer{
 		NoCache: noCache,
-		Dir: dir,
-	})
+		handler: http.FileServer(http.Dir(dir)),
+	}))
 
 }
 
 
 type fileServer struct {
 	NoCache bool
-	Dir string
+	handler http.Handler
 }
 
 func (f fileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (f fileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Last-Modified", time.Now().String())
 		w.Header().Add("Pragma", "no-cache")
 	}
-	http.FileServer(http.Dir(f.Dir)).ServeHTTP(w, r)
+	f.handler.ServeHTTP(w, r)
 }
 func (router Router) PrefixHandler(prefix string, handler http.Handler) {
 	router.router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, handler))
