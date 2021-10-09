@@ -24,7 +24,7 @@ func main () {
 	RequestBindParam(router)
 	RenderFormFile(router)
 	RequestFile(router)
-	router.Use(func(c *xhttp.Context, next xhttp.Next) (reject error) {
+	router.Use(func(c *xhttp.Context, next xhttp.Next) (err error) {
 		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), traceID("traceID"), uuid.New().String()))
 		return next()
 	})
@@ -209,7 +209,7 @@ func RequestTraceID(router *xhttp.Router) {
 	route := xhttp.Route{
 		xhttp.GET, "/request/trace_id",
 	}
-	router.HandleFunc(route, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		return c.WriteBytes([]byte(fmt.Sprintf("traceID: %s", c.RequestContext().Value(traceID("traceID")))))
 	})
 }
@@ -248,13 +248,13 @@ func ResponseTemplate(router *xhttp.Router) {
 }
 
 func GetSetCookie(router *xhttp.Router) {
-	router.HandleFunc(xhttp.Route{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (err error) {
 		query := c.Request.URL.Query()
 		switch query.Get("kind") {
 		case "get":
 			var nameCookie *http.Cookie
 			var hasValue bool
-			nameCookie, hasValue, reject = c.Cookie("name") ; if reject != nil {
+			nameCookie, hasValue, err = c.Cookie("name") ; if err != nil {
 				return
 			}
 			var name string

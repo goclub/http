@@ -33,23 +33,23 @@ func newTestRouter() *xhttp.Router {
 			return c.WriteBytes([]byte("panic"))
 		},
 	})
-	router.HandleFunc(xhttp.Route{xhttp.POST, "/"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.POST, "/"}, func(c *xhttp.Context) (err error) {
 		request :=  RequestHome{}
-		reject = c.BindRequest(&request) ; if reject != nil {
+		err = c.BindRequest(&request) ; if err != nil {
 		    return
 		}
 		reply := ReplyHome{}
 		reply.IDNameAge  = request.ID + ":" + request.Name + ":" + strconv.FormatInt(int64(request.Age), 10)
 		return c.WriteJSON(reply)
 	})
-	router.HandleFunc(xhttp.Route{xhttp.GET, "/count"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/count"}, func(c *xhttp.Context) (err error) {
 		cookieName := "count"
 		var count uint64
-		cookie, hasCookie, reject := c.Cookie(cookieName) ; if reject != nil {
+		cookie, hasCookie, err := c.Cookie(cookieName) ; if err != nil {
 		    return
 		}
 		if hasCookie {
-			count, reject = strconv.ParseUint(cookie.Value, 10, 64) ; if reject != nil {
+			count, err = strconv.ParseUint(cookie.Value, 10, 64) ; if err != nil {
 			    return
 			}
 		}
@@ -60,14 +60,14 @@ func newTestRouter() *xhttp.Router {
 		})
 		return c.WriteBytes([]byte(strconv.FormatUint(count, 10)))
 	})
-	router.HandleFunc(xhttp.Route{xhttp.GET, "/error"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/error"}, func(c *xhttp.Context) (err error) {
 		return errors.New("abc")
 	})
-	router.HandleFunc(xhttp.Route{xhttp.GET, "/panic"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/panic"}, func(c *xhttp.Context) (err error) {
 		panic("123")
 		return nil
 	})
-	router.HandleFunc(xhttp.Route{xhttp.POST, "/form"}, func(c *xhttp.Context) (reject error) {
+	router.HandleFunc(xhttp.Route{xhttp.POST, "/form"}, func(c *xhttp.Context) (err error) {
 		return c.WriteBytes([]byte(c.Request.FormValue("name")))
 	})
 	return router

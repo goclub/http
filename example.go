@@ -15,14 +15,8 @@ type ExampleSendQuery struct {
 	Published bool
 	Limit int
 }
-// 通过实现结构体  Query() (url.Values, error) 方法后传入 xhttp.SendRequest{}.Query
+// 通过实现结构体  Query() (string, error) 方法后传入 xhttp.SendRequest{}.Query
 // 即可设置请求 query 参数
-// func (r ExampleSendQuery) Query() (url.Values, error) {
-// 	v := url.Values{}
-// 	v.Set("published_eq", strconv.FormatBool(r.Published))
-// 	v.Set("limit", strconv.Itoa(r.Limit))
-// 	return v, nil
-// }
 func (r ExampleSendQuery) Query() (string, error) {
 	v := url.Values{}
 	v.Set("published_eq", strconv.FormatBool(r.Published))

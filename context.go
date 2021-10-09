@@ -89,8 +89,9 @@ func (c *Context) CheckError(err error) {
 	}
 }
 
-func (c *Context) Cookie(name string) (value *http.Cookie, has bool, reject error) {
-	cookie, err := c.Request.Cookie(name)
+func (c *Context) Cookie(name string) (value *http.Cookie, has bool, err error) {
+	var cookie *http.Cookie
+	cookie, err = c.Request.Cookie(name)
 	switch err {
 	case nil:
 		return cookie, true, nil

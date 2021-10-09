@@ -7,6 +7,7 @@ import (
 	xhttp "github.com/goclub/http"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
@@ -33,13 +34,13 @@ func main() {
 	// 静态资源
 
 	r.FileServer("/public", path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public"), true)
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/user/{name}"}, func(c *xhttp.Context) (reject error) {
-		name, reject := c.Param("name") ; if reject != nil {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/user/{name}"}, func(c *xhttp.Context) (err error) {
+		name, err := c.Param("name") ; if err != nil {
 			return
 		}
 		return c.WriteBytes([]byte(name))
 	})
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/welcome"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/welcome"}, func(c *xhttp.Context) (err error) {
 		query := c.Request.URL.Query()
 		firstName := query.Get("firstname")
 		if firstName == "" {firstName = "Guest"}
@@ -51,7 +52,7 @@ func main() {
 		--form 'message="abc"' \
 		--form 'nike="123"'
 	*/
-	r.HandleFunc(xhttp.Route{xhttp.POST, "/from_post"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.POST, "/from_post"}, func(c *xhttp.Context) (err error) {
 		message := c.Request.FormValue("message")
 		nick := c.Request.FormValue("nick")
 		if nick == "" {nick = "anonymous"}
@@ -66,12 +67,12 @@ func main() {
 		--form 'name="goclub"' \
 		--form 'message="abc"'
 	*/
-	r.HandleFunc(xhttp.Route{xhttp.POST, "/post"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.POST, "/post"}, func(c *xhttp.Context) (err error) {
 		query := c.Request.URL.Query()
 		id := query.Get("id")
 		pageStr := query.Get("page")
 		if pageStr == "" { pageStr = "0" }
-		page, reject :=  strconv.ParseUint(pageStr, 10, 64) ; if reject != nil {
+		page, err :=  strconv.ParseUint(pageStr, 10, 64) ; if err != nil {
 			return
 		}
 		name := c.Request.FormValue("name")
@@ -88,12 +89,12 @@ func main() {
 	-F "file=@/Users/nimo/Desktop/1.txt" \
 	-H "Content-Type: multipart/form-data"
 	*/
-	r.HandleFunc(xhttp.Route{xhttp.POST, "/upload"}, func(c *xhttp.Context) (reject error) {
-		file, fileHeader, reject := c.Request.FormFile("file") ; if reject != nil {
+	r.HandleFunc(xhttp.Route{xhttp.POST, "/upload"}, func(c *xhttp.Context) (err error) {
+		file, fileHeader, err := c.Request.FormFile("file") ; if err != nil {
 			return
 		}
 		log.Print(fileHeader.Filename)
-		data, reject := ioutil.ReadAll(file) ; if reject != nil {
+		data, err := ioutil.ReadAll(file) ; if err != nil {
 			return
 		}
 		log.Print(string(data))
@@ -105,8 +106,8 @@ func main() {
 	-F "upload[]=@/Users/nimo/Desktop/2.txt" \
 	-H "Content-Type: multipart/form-data"
 	*/
-	r.HandleFunc(xhttp.Route{xhttp.POST, "/multi_file_upload"}, func(c *xhttp.Context) (reject error) {
-		reject = c.Request.ParseMultipartForm(8 << 20) ; if reject != nil {
+	r.HandleFunc(xhttp.Route{xhttp.POST, "/multi_file_upload"}, func(c *xhttp.Context) (err error) {
+		err = c.Request.ParseMultipartForm(8 << 20) ; if err != nil {
 			return
 		}
 		form := c.Request.MultipartForm
@@ -115,10 +116,11 @@ func main() {
 		for _, fileHeader := range files {
 			log.Println(fileHeader.Filename)
 			var data []byte
-			file, err := fileHeader.Open() ; if err != nil {
+			var file multipart.File
+			file, err = fileHeader.Open() ; if err != nil {
 				return
 			}
-			data, reject = ioutil.ReadAll(file) ; if reject != nil {
+			data, err = ioutil.ReadAll(file) ; if err != nil {
 				return
 			}
 			log.Print(string(data))
@@ -127,18 +129,18 @@ func main() {
 	})
 	// goclub/http 不希望在 Group() 中传递前缀，这样会导致url分散
 	v1 := r.Group()
-	v1.HandleFunc(xhttp.Route{xhttp.GET, "/v1/login"}, func(c *xhttp.Context) (reject error) {
+	v1.HandleFunc(xhttp.Route{xhttp.GET, "/v1/login"}, func(c *xhttp.Context) (err error) {
 		return c.WriteBytes([]byte("v1 login"))
 	})
 	v2 := r.Group()
-	v2.HandleFunc(xhttp.Route{xhttp.GET, "/v2/login"}, func(c *xhttp.Context) (reject error) {
+	v2.HandleFunc(xhttp.Route{xhttp.GET, "/v2/login"}, func(c *xhttp.Context) (err error) {
 		return c.WriteBytes([]byte("v2 login"))
 	})
 	// 中间件
-	r.Use(func(c *xhttp.Context, next xhttp.Next) (reject error) {
+	r.Use(func(c *xhttp.Context, next xhttp.Next) (err error) {
 		requestTime := time.Now()
 		log.Print("Request: ", c.Request.Method, c.Request.URL.String())
-		reject = next() ; if reject != nil {
+		err = next() ; if err != nil {
 			return
 		}
 		responseTime := time.Now().Sub(requestTime)
@@ -151,14 +153,14 @@ func main() {
 	curl --location --request POST 'http://127.0.0.1:1111/bind_query_form/1?name=goclub' \
 		--form 'age=18'
 	*/
-	r.HandleFunc(xhttp.Route{xhttp.POST, "/bind_query_form/{id}"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.POST, "/bind_query_form/{id}"}, func(c *xhttp.Context) (err error) {
 		request := struct {
 			ID string `param:"id"`
 			Name string `query:"name"`
 			// 会将 string int 自动转换
 			Age int `form:"age"`
 		}{}
-		reject = c.BindRequest(&request) ; if reject != nil {
+		err = c.BindRequest(&request) ; if err != nil {
 			return
 		}
 		return c.WriteJSON(request)
@@ -168,7 +170,7 @@ func main() {
 	--header 'Content-Type: application/json' \
 	--data-raw '{"id": "1", "age": 18}'
 	*/
-	r.HandleFunc(xhttp.Route{xhttp.POST, "/bind_query_json"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.POST, "/bind_query_json"}, func(c *xhttp.Context) (err error) {
 		request := struct {
 			Name string `query:"name"`
 			// 会将 string int 自动转换
@@ -176,7 +178,7 @@ func main() {
 			// 会将 string int 自动转换
 			ID int `json:"id"`
 		}{}
-		reject = c.BindRequest(&request) ; if reject != nil {
+		err = c.BindRequest(&request) ; if err != nil {
 			return
 		}
 		return c.WriteJSON(request)
@@ -189,26 +191,26 @@ func main() {
 	// https://pkg.go.dev/github.com/goclub/http#example-Client.Send
 	// https://pkg.go.dev/github.com/goclub/http#example-Client.Do
 	// https://cn.bing.com/search?q=go+html+%E6%A8%A1%E6%9D%BF%E6%B8%B2%E6%9F%93%E5%BA%93%E9%80%89%E5%9E%8B
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/index"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/index"}, func(c *xhttp.Context) (err error) {
 		// 为了更方面的支持各种模板引擎， goclub/http 提供 render 接口让使用者自己组合
 		return c.Render(func(buffer *bytes.Buffer) error {
 			buffer.WriteString(`<a href="https://github.com/goclub">goclub</a>`)
 			return nil
 		})
 	})
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/redirect"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/redirect"}, func(c *xhttp.Context) (err error) {
 		http.Redirect(c.Writer, c.Request, "https://goclub.vip", 302)
 		return nil
 	})
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/set"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/set"}, func(c *xhttp.Context) (err error) {
 		c.SetCookie(&http.Cookie{
 			Name: "time",
 			Value:  time.Now().Format("15:04:05"),
 		})
 		return c.WriteBytes([]byte("set"))
 	})
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/get"}, func(c *xhttp.Context) (reject error) {
-		cookie, hasCookie, reject := c.Cookie("time") ; if reject != nil {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/get"}, func(c *xhttp.Context) (err error) {
+		cookie, hasCookie, err := c.Cookie("time") ; if err != nil {
 			return
 		}
 		message := ""
@@ -219,7 +221,7 @@ func main() {
 		}
 		return c.WriteBytes([]byte(message))
 	})
-	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/clear"}, func(c *xhttp.Context) (reject error) {
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/clear"}, func(c *xhttp.Context) (err error) {
 		c.ClearCookie(&http.Cookie{Name: "time"})
 		return c.WriteBytes([]byte("clear"))
 	})

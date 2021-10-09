@@ -78,7 +78,7 @@ type Mock struct {
 	Reply MockReply `note:"响应"`
 	Match func(c *Context) (replyKey string) `note:"根据请求参数决定响应结果"`
 	MaxAutoCount int64 `note:"最大计数,默认5"`
-	HandleFunc func (c *Context, data interface{}) error
+	HandleFunc func (c *Context, data interface{}) (err error)
 	Render string
 }
 type MockRequest map[string]interface{}
