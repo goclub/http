@@ -4,7 +4,6 @@ import (
 	"context"
 	xhttp "github.com/goclub/http"
 	xjson "github.com/goclub/json"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"testing"
@@ -32,7 +31,7 @@ func ExampleClient_Do() {
 	}
 	defer bodyClose()
 	if statusCode != 200 {
-		panic(errors.New("response " + resp.Status))
+		panic(xerr.New("response " + resp.Status))
 	}
 	var reply []xhttp.ExampleReplyPost
 	err = xjson.NewDecoder(resp.Body).Decode(&reply) ; if err != nil {
@@ -57,7 +56,7 @@ func ExampleClient_Send() {
 	}
 		defer bodyClose()
 		if statusCode != 200 {
-			panic(errors.New("status: " + resp.Status))
+			panic(xerr.New("status: " + resp.Status))
 		}
 		var reply []xhttp.ExampleReplyPost
 		err = xjson.NewDecoder(resp.Body).Decode(&reply) ; if err != nil {

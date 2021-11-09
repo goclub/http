@@ -3,9 +3,9 @@ package xhttp
 import (
 	"bytes"
 	"context"
+	xerr "github.com/goclub/error"
 	xjson "github.com/goclub/json"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"net/http"
 )
 // 包含 *http.Request http.ResponseWriter 并封装一些便捷方法
@@ -39,7 +39,7 @@ func (c *Context) Param(name string) (param string, err error) {
 	var has bool
 	param, has = data[name]
 	if !has {
-		return "", errors.New(`not found param (` + name + `)`)
+		return "", xerr.New(`not found param (` + name + `)`)
 	}
 	return param, nil
 }

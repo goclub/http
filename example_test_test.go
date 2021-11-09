@@ -2,7 +2,6 @@ package xhttp_test
 
 import (
 	"context"
-	"errors"
 	xhttp "github.com/goclub/http"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -61,7 +60,7 @@ func newTestRouter() *xhttp.Router {
 		return c.WriteBytes([]byte(strconv.FormatUint(count, 10)))
 	})
 	router.HandleFunc(xhttp.Route{xhttp.GET, "/error"}, func(c *xhttp.Context) (err error) {
-		return errors.New("abc")
+		return xerr.New("abc")
 	})
 	router.HandleFunc(xhttp.Route{xhttp.GET, "/panic"}, func(c *xhttp.Context) (err error) {
 		panic("123")

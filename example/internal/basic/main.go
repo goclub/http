@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	xerr "github.com/goclub/error"
 	xhttp "github.com/goclub/http"
 	"io/ioutil"
 	"log"
@@ -20,6 +21,12 @@ func main() {
 	r := xhttp.NewRouter(xhttp.RouterOption{
 		// error 拦截器 会在 r.Use() r.HandleFunc() 返回 err 不为 nil 时执行
 		OnCatchError: func(c *xhttp.Context, err error) error {
+			switch true {
+			case xerr.Is(context.Canceled, err):
+				return c.WriteBytes([]byte("请求取消"))
+			case xerr.Is(context.DeadlineExceeded, err):
+				return c.WriteBytes([]byte("请求超时"))
+			}
 			log.Print(err)
 			debug.PrintStack()
 			return nil
