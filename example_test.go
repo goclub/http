@@ -47,7 +47,7 @@ func ExampleClient_Send() {
 		log.Print("ExampleClient_Send:query")
 		ctx := context.TODO()
 		client := xhttp.NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com", "/goclub/http/posts", xhttp.SendRequest{
+		req, resp, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com", "/goclub/http/posts/", xhttp.SendRequest{
 			Query:          xhttp.ExampleSendQuery{
 				Published: true,
 				Limit:     2,
@@ -57,7 +57,8 @@ func ExampleClient_Send() {
 	}
 		defer bodyClose()
 		if statusCode != 200 {
-			panic(xerr.New("status: " + resp.Status))
+			log.Print(xhttp.DumpRequestResponseString(req, resp, true))
+			return
 		}
 		var reply []xhttp.ExampleReplyPost
 		err = xjson.NewDecoder(resp.Body).Decode(&reply) ; if err != nil {

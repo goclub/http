@@ -48,21 +48,13 @@ func (client *Client) CloseIdleConnections() {
 	client.Core.CloseIdleConnections()
 }
 
-func (client *Client) coreSend(ctx context.Context, method Method, url string, request SendRequest) (resp *http.Response, bodyClose func() error, statusCode int, err error)  {
+func (client *Client) coreSend(ctx context.Context, method Method, url string, sendRequest SendRequest) (request *http.Request, resp *http.Response, bodyClose func() error, statusCode int, err error)  {
 	// 防止空指针错误
 	bodyClose = func() error { return nil }
-	var httpRequest *http.Request
-	httpRequest, err = request.HttpRequest(ctx, method, url) ; if err != nil {return}
-	resp, bodyClose, statusCode, err = client.Do(httpRequest)
-	if request.Debug {
-		if resp != nil {
-			dataBytes, err :=  httputil.DumpResponse(resp, true) ; if err != nil {
-				// Debug时打印错误
-				log.Print("goclub/http: Debug: ", err)
-			}
-			log.Print("Response: ", method, " ", url, "\n", string(dataBytes))
-		}
-
+	request, err = sendRequest.HttpRequest(ctx, method, url) ; if err != nil {return}
+	resp, bodyClose, statusCode, err = client.Do(request)
+	if sendRequest.Debug {
+		log.Print(string(DumpRequestResponse(request, resp, true)))
 	}
 	return
 }
@@ -70,7 +62,7 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, r
 
 // 发送 query from json 请求等常见下使用 http.Request{} 需要设置 header 等繁琐事项
 // 使用 xhttp.Send() 和 xhttp.Request{} 可以高效的创建请求
-func (client *Client) Send(ctx context.Context, method Method, origin string, path string, request SendRequest) (resp *http.Response, bodyClose func() error, statusCode int, err error)  {
+func (client *Client) Send(ctx context.Context, method Method, origin string, path string, request SendRequest) (req *http.Request, resp *http.Response, bodyClose func() error, statusCode int, err error)  {
 	path = strings.TrimSpace(path)
 	if path == "" {
 
@@ -93,7 +85,7 @@ func (client *Client) Send(ctx context.Context, method Method, origin string, pa
 				err = ctx.Err()
 				return
 		default:
-			resp, bodyClose, statusCode, err = client.coreSend(ctx, method, url, request)
+			req, resp, bodyClose, statusCode, err = client.coreSend(ctx, method, url, request)
 			requestTimes--
 			shouldRetry := request.Retry.Check(resp, err)
 			// 强制 200 不重试
@@ -131,5 +123,32 @@ func (client *Client) Send(ctx context.Context, method Method, origin string, pa
 			return
 		}
 	}
+	return
+}
+
+
+
+func DumpRequestResponseString(req *http.Request, resp *http.Response, body bool) (data string) {
+	return string(DumpRequestResponse(req, resp, body))
+}
+func DumpRequestResponse(req *http.Request, resp *http.Response, body bool) (data []byte) {
+	var reqData []byte
+	if req != nil {
+		var err error
+		reqData, err = httputil.DumpRequest(req, body) ; if err != nil {
+			return []byte(err.Error())
+		}
+	}
+	var respData []byte
+	if resp != nil {
+		var err error
+		respData, err = httputil.DumpResponse(resp, body) ; if err != nil {
+			return []byte(err.Error())
+		}
+	}
+	data = append(data, []byte("Request:\n")...)
+	data = append(data, reqData...)
+	data = append(data, []byte("Response:\n")...)
+	data = append(data, respData...)
 	return
 }

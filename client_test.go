@@ -45,7 +45,7 @@ func TestClient_SendRetry(t *testing.T) {
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
 		// dns 出问题的时候会 no such host
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://nosuchhost102923092190311.com", "", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://nosuchhost102923092190311.com", "", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -59,7 +59,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/429", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/429", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -72,7 +72,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -85,7 +85,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/504", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/504", SendRequest{
 			Retry: RequestRetry{
 				Times: 3,
 				Interval:  time.Millisecond*100,
@@ -98,7 +98,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
 		
 		}) ; assert.NoError(t, err)
 		defer assert.NoError(t, bodyClose())
@@ -109,7 +109,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
 			Retry: RequestRetry{
 				Times: 1,
 				Interval:  time.Millisecond*100,
@@ -123,7 +123,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/500-504-200", SendRequest{
 			Retry: RequestRetry{
 				Times: 2,
 				Interval:  time.Millisecond*100,
@@ -138,7 +138,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/200", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/200", SendRequest{
 			Retry: RequestRetry{
 				Times: 2,
 				Check: func(resp *http.Response, requestErr error) (shouldRetry bool) {
@@ -154,7 +154,7 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://apierror.weixin.qq.com", "/cgi-bin/token", SendRequest{
+		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "https://apierror.weixin.qq.com", "/cgi-bin/token", SendRequest{
 			Retry: RequestRetry{
 				Times: 2,
 				BackupOrigin: "https://api2.weixin.qq.com",
@@ -166,7 +166,7 @@ func TestClient_SendRetry(t *testing.T) {
 		_=resp
 	}
 	{
-		resp, bodyClose, _, err := NewClient(nil).Send(context.TODO(), GET, "https://bing.com", "/", SendRequest{
+		_, resp, bodyClose, _, err := NewClient(nil).Send(context.TODO(), GET, "http://httpbin.org", "/headers", SendRequest{
 			Debug: true,
 		}) ; assert.NoError(t, err)
 		defer bodyClose()
