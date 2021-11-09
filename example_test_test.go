@@ -2,6 +2,7 @@ package xhttp_test
 
 import (
 	"context"
+	xerr "github.com/goclub/error"
 	xhttp "github.com/goclub/http"
 	"github.com/stretchr/testify/assert"
 	"log"
