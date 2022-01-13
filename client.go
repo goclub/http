@@ -52,6 +52,12 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, s
 	// 防止空指针错误
 	bodyClose = func() error { return nil }
 	request, err = sendRequest.HttpRequest(ctx, method, url) ; if err != nil {return}
+	if sendRequest.BeforeSend != nil {
+		err = sendRequest.BeforeSend(request) ; if err != nil {
+			return
+		}
+	}
+
 	resp, bodyClose, statusCode, err = client.Do(request)
 	if sendRequest.Debug {
 		log.Print(string(DumpRequestResponse(request, resp, true)))

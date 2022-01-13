@@ -13,27 +13,24 @@ import (
 	"time"
 )
 
-type RequestQuery interface {
-	Query() (string, error)
-}
-type RequestFormUrlencoded interface {
-	FormUrlencoded() (string, error)
-}
-type RequestFormData interface {
-	FormData(w *multipart.Writer) (err error)
-}
-type RequestHeader interface {
-	Header() (http.Header, error)
-}
 type SendRequest struct {
-	Query RequestQuery
-	FormUrlencoded RequestFormUrlencoded
-	FormData RequestFormData
-	Header RequestHeader
+	Query interface {
+		Query() (string, error)
+	}
+	FormUrlencoded interface {
+		FormUrlencoded() (string, error)
+	}
+	FormData interface {
+		FormData(w *multipart.Writer) (err error)
+	}
+	Header interface {
+		Header() (http.Header, error)
+	}
 	JSON interface{}
 	Body io.Reader
 	Debug bool
 	Retry RequestRetry
+	BeforeSend func(r *http.Request) (err error)
 }
 type RequestRetry struct {
 	Times uint8
@@ -104,12 +101,13 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, reque
 			httpRequest.Header = header
 		}
 		if request.FormUrlencoded != nil {
-			httpRequest.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			httpRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
 		if request.FormData != nil {
-			httpRequest.Header.Add("Content-Type", formWriter.FormDataContentType())
+			httpRequest.Header.Set("Content-Type", formWriter.FormDataContentType())
 		}
 		if request.JSON != nil {
+			httpRequest.Header.Set("Accept", "application/json")
 			httpRequest.Header.Set("Content-Type", "application/json")
 		}
 	}
