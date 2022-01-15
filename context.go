@@ -6,6 +6,7 @@ import (
 	xerr "github.com/goclub/error"
 	xjson "github.com/goclub/json"
 	"github.com/gorilla/mux"
+	realip "github.com/tomasen/realip"
 	"net/http"
 )
 // 包含 *http.Request http.ResponseWriter 并封装一些便捷方法
@@ -23,6 +24,10 @@ func NewContext (w http.ResponseWriter, r *http.Request, router *Router) *Contex
 		router: router,
 	}
 }
+func (c *Context) RequestRealIP()  (ip string) {
+	return realip.FromRequest(c.Request)
+}
+
 // 等同于 c.Request.Context()
 func (c *Context) RequestContext() context.Context {
 	return c.Request.Context()

@@ -12,4 +12,5 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/stretchr/testify v1.7.0
+	github.com/tomasen/realip v0.0.0-20180522021738-f0c99a92ddce
 )
