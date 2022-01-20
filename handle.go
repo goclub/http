@@ -1,8 +1,10 @@
 package xhttp
 
 import (
+	xerr "github.com/goclub/error"
 	"github.com/gorilla/mux"
 	"net/http"
+	"strings"
 )
 
 
@@ -15,6 +17,9 @@ func (group *Group) HandleFunc(route Route,handler HandleFunc) {
 }
 
 func coreHandleFunc(serve *Router, router *mux.Router, route Route,  handler HandleFunc) {
+	if strings.HasPrefix(route.Path, "/") == false{
+		panic(xerr.New("goclub/http: HandleFunc(route) route.Path must has prefix /"))
+	}
 	serve.patterns = append(serve.patterns, route)
 	router.HandleFunc(route.Path, func(w http.ResponseWriter, r *http.Request) {
 		c := NewContext(w, r, serve)
