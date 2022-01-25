@@ -84,5 +84,5 @@ func (resp *Response) BindJSON(statusCode int, v interface{})  {
 }
 func (resp *Response) ExpectJSON(statusCode int, reply interface{}) {
 	data, err := xjson.Marshal(reply) ; testHandleError(err)
-	assert.Equal(resp.t, data, resp.Bytes(statusCode))
+	assert.Equal(resp.t, string(data), resp.String(statusCode))
 }
