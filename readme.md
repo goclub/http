@@ -1,3 +1,8 @@
+---
+permalink: /
+sidebarBasedOnContent: true
+---
+
 # xhttp
 
 > 基于 Go 标准库 net/http 扩展出一些安全便捷的方法
