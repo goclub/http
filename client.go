@@ -1,7 +1,9 @@
 package xhttp
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -57,10 +59,19 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, s
 			return
 		}
 	}
-
+	var requestBodyBytes []byte
+	if sendRequest.DoNotReturnRequestBody == false && request.Body != nil {
+		requestBodyBytes,err = ioutil.ReadAll(request.Body) ; if err != nil {
+			return
+		}
+		request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
+	}
 	resp, bodyClose, statusCode, err = client.Do(request)
 	if sendRequest.Debug {
 		log.Print(string(DumpRequestResponse(request, resp, true)))
+	}
+	if requestBodyBytes != nil {
+		request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
 	}
 	return
 }

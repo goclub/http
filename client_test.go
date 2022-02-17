@@ -12,7 +12,13 @@ import (
 
 func TestClient_SendRetry(t *testing.T) {
 	http.HandleFunc("/200", func(writer http.ResponseWriter, request *http.Request) {
+		body, err := ioutil.ReadAll(request.Body) ; if err != nil {
+		    panic(err)
+		}
 		writer.WriteHeader(200)
+		_, err = writer.Write(body) ; if err != nil {
+			panic(err)
+		}
 	})
 	http.HandleFunc("/429", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusTooManyRequests)
@@ -138,7 +144,10 @@ func TestClient_SendRetry(t *testing.T) {
 	{
 		ctx := context.Background()
 		client := NewClient(&http.Client{})
-		_, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/200", SendRequest{
+		req, resp, bodyClose, statusCode, err := client.Send(ctx, GET, "http://localhost:2222", "/200", SendRequest{
+			JSON: map[string]interface{}{
+				"name":"goclub",
+			},
 			Retry: RequestRetry{
 				Times: 2,
 				Check: func(resp *http.Response, requestErr error) (shouldRetry bool) {
@@ -147,9 +156,21 @@ func TestClient_SendRetry(t *testing.T) {
 			},
 			// Debug: true,
 		}) ; assert.NoError(t, err)
-		defer assert.NoError(t, bodyClose())
+		defer func() {
+			assert.NoError(t, bodyClose())
+		}()
 		assert.Equal(t, statusCode, 200)
-		_=resp
+		{
+			// resp
+			body, err := ioutil.ReadAll(resp.Body) ; assert.NoError(t, err)
+			assert.Equal(t, string(body), `{"name":"goclub"}`)
+		}
+		{
+			// req
+			body, err := ioutil.ReadAll(req.Body) ; assert.NoError(t, err)
+			assert.Equal(t, string(body), `{"name":"goclub"}`)
+		}
+
 	}
 	{
 		ctx := context.Background()

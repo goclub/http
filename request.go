@@ -31,6 +31,9 @@ type SendRequest struct {
 	Debug bool
 	Retry RequestRetry
 	BeforeSend func(r *http.Request) (err error)
+	// DoNotReturnRequestBody 控制返回的 http.Request{}.Body 是否为空
+	// 在请求 Body 大时可以设置为 true 以提高性能
+	DoNotReturnRequestBody bool
 }
 type RequestRetry struct {
 	Times uint8
