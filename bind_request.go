@@ -62,8 +62,10 @@ func BindRequest(ptr interface{}, r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		err = xjson.Unmarshal(jsonb, ptr) ; if err != nil {
-			return xerr.WithStack(err)
+		if len(jsonb) != 0 {
+			err = xjson.Unmarshal(jsonb, ptr) ; if err != nil {
+				return xerr.WithStack(err)
+			}
 		}
 	default:
 	}
