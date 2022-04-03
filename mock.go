@@ -78,7 +78,7 @@ type Mock struct {
 	Reply MockReply `note:"响应"`
 	Match func(c *Context) (replyKey string) `note:"根据请求参数决定响应结果"`
 	MaxAutoCount int64 `note:"最大计数,默认5"`
-	HandleFunc func (c *Context, data interface{}) (err error)
+	HandleFunc func (c *Context, replyKey string, data interface{}) (err error)
 	Render string
 }
 type MockRequest map[string]interface{}
@@ -151,7 +151,7 @@ func (ms MockServer) URL(mock Mock) {
 			return c.WriteBytes([]byte(fmt.Sprintf("reply:%s\ncan not found key: %s", replyBytes, replyKey)))
 		}
 		if mock.HandleFunc != nil {
-			return mock.HandleFunc(c, response)
+			return mock.HandleFunc(c, replyKey, response)
 
 		}
 		if mock.Render != "" {

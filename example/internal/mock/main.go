@@ -136,8 +136,8 @@ func main() {
 	})
 	ms.URL(xhttp.Mock{
 		Route:               xhttp.Route{xhttp.GET, "/handleFunc"},
-		HandleFunc: func(c *xhttp.Context, data interface{}) error {
-			return c.WriteJSON("handleFunc")
+		HandleFunc: func(c *xhttp.Context, replyKey string, data interface{}) error {
+			return c.WriteJSON("handleFunc " + replyKey)
 		},
 	})
 	ms.URL(xhttp.Mock{
