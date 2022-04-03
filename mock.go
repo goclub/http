@@ -167,14 +167,14 @@ func (server MockServer) currentReplyKey(c *Context, route Route, match func(*Co
 	if hasDBReplyKey {
 		replyKey = 	dbReplyKey
 	}
-	// header
-	headerReplyKey := c.Request.URL.Query().Get("_reply")
-	if headerReplyKey != "" {
-		replyKey = 	headerReplyKey
+	// query
+	queryReplyKey := c.Request.URL.Query().Get("_")
+	if queryReplyKey != "" {
+		replyKey = 	queryReplyKey
 	}
 	// match
-	headerScene :=  c.Request.URL.Query().Get("_scene")
-	if headerScene == "" {
+	queryScene :=  c.Request.URL.Query().Get("_scene")
+	if queryScene == "" {
 		c.Request.Header.Set("_scene", server.db.scene)
 	}
 	if match != nil {
