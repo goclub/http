@@ -39,10 +39,23 @@ func main() {
 		},
 	})
 	// 静态资源
-
-	r.FileServer("/public", path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/gin/public"), true)
+	publicPath := path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/basic/public")
+	log.Print("publicPath:", publicPath)
+	r.FileServer("/public", publicPath, true, func(c *xhttp.Context, next xhttp.Next) (err error) {
+		// 拦截部分静态资源,要求必须授权或需要密码才能访问 (这里需要匹配 /auth.js 不是 /public/auth.js 因为上面配置了前缀 /public)
+		if c.Request.URL.Path == "/auth.js" {
+			if c.Request.URL.Query().Get("p") == "abc" {
+				return next()
+			} else {
+				c.WriteStatusCode(http.StatusForbidden)
+				return c.WriteBytes([]byte("Forbidden"))
+			}
+		}
+		return next()
+	})
 	r.HandleFunc(xhttp.Route{xhttp.GET, "/user/{name}"}, func(c *xhttp.Context) (err error) {
-		name, err := c.Param("name") ; if err != nil {
+		name, err := c.Param("name")
+		if err != nil {
 			return
 		}
 		return c.WriteBytes([]byte(name))
@@ -50,19 +63,23 @@ func main() {
 	r.HandleFunc(xhttp.Route{xhttp.GET, "/welcome"}, func(c *xhttp.Context) (err error) {
 		query := c.Request.URL.Query()
 		firstName := query.Get("firstname")
-		if firstName == "" {firstName = "Guest"}
+		if firstName == "" {
+			firstName = "Guest"
+		}
 		lastName := query.Get("lastname")
 		return c.WriteBytes([]byte("hello " + firstName + " " + lastName))
 	})
 	/*
-	curl --location --request POST 'http://127.0.0.1:1111/from_post' \
-		--form 'message="abc"' \
-		--form 'nike="123"'
+		curl --location --request POST 'http://127.0.0.1:1111/from_post' \
+			--form 'message="abc"' \
+			--form 'nike="123"'
 	*/
 	r.HandleFunc(xhttp.Route{xhttp.POST, "/from_post"}, func(c *xhttp.Context) (err error) {
 		message := c.Request.FormValue("message")
 		nick := c.Request.FormValue("nick")
-		if nick == "" {nick = "anonymous"}
+		if nick == "" {
+			nick = "anonymous"
+		}
 		return c.WriteJSON(map[string]interface{}{
 			"status":  "posted",
 			"message": message,
@@ -70,51 +87,57 @@ func main() {
 		})
 	})
 	/*
-	curl --location --request POST 'http://127.0.0.1:1111/post?id=1&page=2' \
-		--form 'name="goclub"' \
-		--form 'message="abc"'
+		curl --location --request POST 'http://127.0.0.1:1111/post?id=1&page=2' \
+			--form 'name="goclub"' \
+			--form 'message="abc"'
 	*/
 	r.HandleFunc(xhttp.Route{xhttp.POST, "/post"}, func(c *xhttp.Context) (err error) {
 		query := c.Request.URL.Query()
 		id := query.Get("id")
 		pageStr := query.Get("page")
-		if pageStr == "" { pageStr = "0" }
-		page, err :=  strconv.ParseUint(pageStr, 10, 64) ; if err != nil {
+		if pageStr == "" {
+			pageStr = "0"
+		}
+		page, err := strconv.ParseUint(pageStr, 10, 64)
+		if err != nil {
 			return
 		}
 		name := c.Request.FormValue("name")
 		message := c.Request.FormValue("message")
 		return c.WriteJSON(map[string]interface{}{
-			"id": id,
-			"page": page,
-			"name": name,
+			"id":      id,
+			"page":    page,
+			"name":    name,
 			"message": message,
 		})
 	})
 	/*
-	curl -X POST http://localhost:1111/upload \
-	-F "file=@/Users/nimo/Desktop/1.txt" \
-	-H "Content-Type: multipart/form-data"
+		curl -X POST http://localhost:1111/upload \
+		-F "file=@/Users/nimo/Desktop/1.txt" \
+		-H "Content-Type: multipart/form-data"
 	*/
 	r.HandleFunc(xhttp.Route{xhttp.POST, "/upload"}, func(c *xhttp.Context) (err error) {
-		file, fileHeader, err := c.Request.FormFile("file") ; if err != nil {
+		file, fileHeader, err := c.Request.FormFile("file")
+		if err != nil {
 			return
 		}
 		log.Print(fileHeader.Filename)
-		data, err := ioutil.ReadAll(file) ; if err != nil {
+		data, err := ioutil.ReadAll(file)
+		if err != nil {
 			return
 		}
 		log.Print(string(data))
 		return c.WriteBytes([]byte(fileHeader.Filename))
 	})
 	/*
-	curl -X POST http://localhost:1111/multi_file_upload \
-	-F "upload[]=@/Users/nimo/Desktop/1.txt" \
-	-F "upload[]=@/Users/nimo/Desktop/2.txt" \
-	-H "Content-Type: multipart/form-data"
+		curl -X POST http://localhost:1111/multi_file_upload \
+		-F "upload[]=@/Users/nimo/Desktop/1.txt" \
+		-F "upload[]=@/Users/nimo/Desktop/2.txt" \
+		-H "Content-Type: multipart/form-data"
 	*/
 	r.HandleFunc(xhttp.Route{xhttp.POST, "/multi_file_upload"}, func(c *xhttp.Context) (err error) {
-		err = c.Request.ParseMultipartForm(8 << 20) ; if err != nil {
+		err = c.Request.ParseMultipartForm(8 << 20)
+		if err != nil {
 			return
 		}
 		form := c.Request.MultipartForm
@@ -124,10 +147,12 @@ func main() {
 			log.Println(fileHeader.Filename)
 			var data []byte
 			var file multipart.File
-			file, err = fileHeader.Open() ; if err != nil {
+			file, err = fileHeader.Open()
+			if err != nil {
 				return
 			}
-			data, err = ioutil.ReadAll(file) ; if err != nil {
+			data, err = ioutil.ReadAll(file)
+			if err != nil {
 				return
 			}
 			log.Print(string(data))
@@ -147,35 +172,37 @@ func main() {
 	r.Use(func(c *xhttp.Context, next xhttp.Next) (err error) {
 		requestTime := time.Now()
 		log.Print("Request: ", c.Request.Method, c.Request.URL.String())
-		err = next() ; if err != nil {
+		err = next()
+		if err != nil {
 			return
 		}
 		responseTime := time.Now().Sub(requestTime)
-		log.Print("Response: (" , responseTime.String(), ") ", c.Request.Method, c.Request.URL.String())
+		log.Print("Response: (", responseTime.String(), ") ", c.Request.Method, c.Request.URL.String())
 		return nil
 	})
 	// goclub/http 自己实现了绑定器，用于绑定各种 http 请求
 	// 使用自定义结构绑定表单数据
 	/*
-	curl --location --request POST 'http://127.0.0.1:1111/bind_query_form/1?name=goclub' \
-		--form 'age=18'
+		curl --location --request POST 'http://127.0.0.1:1111/bind_query_form/1?name=goclub' \
+			--form 'age=18'
 	*/
 	r.HandleFunc(xhttp.Route{xhttp.POST, "/bind_query_form/{id}"}, func(c *xhttp.Context) (err error) {
 		request := struct {
-			ID string `param:"id"`
+			ID   string `param:"id"`
 			Name string `query:"name"`
 			// 会将 string int 自动转换
 			Age int `form:"age"`
 		}{}
-		err = c.BindRequest(&request) ; if err != nil {
+		err = c.BindRequest(&request)
+		if err != nil {
 			return
 		}
 		return c.WriteJSON(request)
 	})
 	/*
-	curl --location --request POST 'http://127.0.0.1:1111/bind_query_json?name=goclub' \
-	--header 'Content-Type: application/json' \
-	--data-raw '{"id": "1", "age": 18}'
+		curl --location --request POST 'http://127.0.0.1:1111/bind_query_json?name=goclub' \
+		--header 'Content-Type: application/json' \
+		--data-raw '{"id": "1", "age": 18}'
 	*/
 	r.HandleFunc(xhttp.Route{xhttp.POST, "/bind_query_json"}, func(c *xhttp.Context) (err error) {
 		request := struct {
@@ -185,7 +212,8 @@ func main() {
 			// 会将 string int 自动转换
 			ID int `json:"id"`
 		}{}
-		err = c.BindRequest(&request) ; if err != nil {
+		err = c.BindRequest(&request)
+		if err != nil {
 			return
 		}
 		return c.WriteJSON(request)
@@ -211,13 +239,14 @@ func main() {
 	})
 	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/set"}, func(c *xhttp.Context) (err error) {
 		c.SetCookie(&http.Cookie{
-			Name: "time",
-			Value:  time.Now().Format("15:04:05"),
+			Name:  "time",
+			Value: time.Now().Format("15:04:05"),
 		})
 		return c.WriteBytes([]byte("set"))
 	})
 	r.HandleFunc(xhttp.Route{xhttp.GET, "/cookie/get"}, func(c *xhttp.Context) (err error) {
-		cookie, hasCookie, err := c.Cookie("time") ; if err != nil {
+		cookie, hasCookie, err := c.Cookie("time")
+		if err != nil {
 			return
 		}
 		message := ""
@@ -249,8 +278,8 @@ func main() {
 	*/
 	addr := ":1111"
 	server := &http.Server{
-		Addr:  addr,
-		Handler:  r,
+		Addr:    addr,
+		Handler: r,
 		// 自定义HTTP配置
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -261,7 +290,8 @@ func main() {
 	// 如果需要使用 https 证书 则通过 server.ListenAndServeTLS() 启动服务
 	// 或者在 cdn 环节部署 https
 	go func() {
-		listenErr := server.ListenAndServe() ; if listenErr !=nil {
+		listenErr := server.ListenAndServe()
+		if listenErr != nil {
 			if listenErr != http.ErrServerClosed {
 				panic(listenErr)
 			}
