@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	realip "github.com/tomasen/realip"
 	"net/http"
+	"reflect"
 )
 // 包含 *http.Request http.ResponseWriter 并封装一些便捷方法
 type Context struct {
@@ -78,6 +79,19 @@ func (c *Context) WriteJSON(v interface{}) error {
 // 绑定请求，支持自定义结构体表 `query` `form` `param`
 func (c *Context) BindRequest(ptr interface{}) error {
 	return BindRequest(ptr, c.Request)
+}
+func (c *Context) UnmarshalJSONFromQuery(queryKey string, ptr interface{}) error {
+	// 判断ptr 必须是指针
+	if reflect.ValueOf(ptr).Kind() != reflect.Ptr {
+		return xerr.New("ptr not be pointer")
+	}
+	value := c.Request.URL.Query().Get(queryKey)
+	if len(value) != 0 {
+		err := xjson.Unmarshal([]byte(value), ptr) ; if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 // 让 Router{}.OnCatchError 处理传入的错误
 func (c *Context) CheckPanic(r interface{}) {
