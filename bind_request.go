@@ -28,6 +28,10 @@ type bindRequestEachCounter struct {
 }
 
 func BindRequest(ptr interface{}, r *http.Request) error {
+	// 判断ptr 必须是指针
+	if reflect.ValueOf(ptr).Kind() != reflect.Ptr {
+		return xerr.New("goclub/http: BindRequest(ptr) ptr not be pointer")
+	}
 	contentType := r.Header.Get("Content-Type")
 	query := r.URL.Query()
 	queryCount := len(query)
