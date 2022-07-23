@@ -83,7 +83,7 @@ func (c *Context) BindRequest(ptr interface{}) error {
 func (c *Context) UnmarshalJSONFromQuery(queryKey string, ptr interface{}) error {
 	// 判断ptr 必须是指针
 	if reflect.ValueOf(ptr).Kind() != reflect.Ptr {
-		return xerr.New("ptr not be pointer")
+		return xerr.New("goclub/http: Context.UnmarshalJSONFromQuery(queryKey, ptr) ptr not be pointer")
 	}
 	value := c.Request.URL.Query().Get(queryKey)
 	if len(value) != 0 {
