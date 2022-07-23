@@ -4,17 +4,25 @@ import (
 	"net/url"
 	"strconv"
 )
-type ExampleReplyPost struct{
-	ID int `json:"id"`
-	Title string `json:"title"`
-	Views int `json:"views"`
-	Published bool `json:"published"`
-	CreatedAt string `json:"createdAt"`
+
+type ExampleReplyPost struct {
+	Slideshow struct {
+		Title  string `json:"title"`
+		Author string `json:"author"`
+		Date   string `json:"date"`
+		Slides []struct {
+			Title string   `json:"title"`
+			Type  string   `json:"type"`
+			Items []string `json:"items,omitempty"`
+		} `json:"slides"`
+	} `json:"slideshow"`
 }
+
 type ExampleSendQuery struct {
 	Published bool
-	Limit int
+	Limit     int
 }
+
 // 通过实现结构体  Query() (string, error) 方法后传入 xhttp.SendRequest{}.Query
 // 即可设置请求 query 参数
 func (r ExampleSendQuery) Query() (string, error) {

@@ -24,7 +24,7 @@ func ExampleClient_Do() {
 	log.Print("ExampleClient_Do")
 	ctx := context.TODO()
 	client := xhttp.NewClient(&http.Client{})
-	url := "https://mockend.com/goclub/http/posts?views_eq=20"
+	url := "https://httpbin.org/json"
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func ExampleClient_Do() {
 	if statusCode != 200 {
 		panic(xerr.New("response " + resp.Status))
 	}
-	var reply []xhttp.ExampleReplyPost
+	var reply xhttp.ExampleReplyPost
 	err = xjson.NewDecoder(resp.Body).Decode(&reply)
 	if err != nil {
 		panic(err)
@@ -51,26 +51,38 @@ func ExampleClient_Send() {
 		log.Print("ExampleClient_Send:query")
 		ctx := context.TODO()
 		client := xhttp.NewClient(&http.Client{})
-		httpResult, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com", "/goclub/http/posts/", xhttp.SendRequest{
-			Query: xhttp.ExampleSendQuery{
-				Published: true,
-				Limit:     2,
-			},
-		})
-		if err != nil {
-			panic(err)
-		}
-		defer bodyClose()
-		if statusCode != 200 {
-			log.Print(httpResult.DumpRequestResponseString(true))
+		err := func() (err error) {
+			httpResult, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://httpbin.org", "/json", xhttp.SendRequest{
+				Query: xhttp.ExampleSendQuery{
+					Published: true,
+					Limit:     2,
+				},
+			})
+			// 1. 遇到错误向上传递
+			if err != nil {
+				return
+			}
+			// 2. bodyClose 防止内存泄露
+			defer bodyClose()
+			// 3. 检查状态码
+			if statusCode != 200 {
+				// 状态码错误时候记录日志
+				log.Print(httpResult.DumpRequestResponseString(true))
+				err = xerr.New("http response statusCode != 200")
+				return
+			}
+			// json解码
+			var reply xhttp.ExampleReplyPost
+			err = httpResult.ReadResponseBodyAndUnmarshal(xjson.Unmarshal, &reply)
+			if err != nil {
+				// 解码错误时记录日志
+				log.Print(httpResult.DumpRequestResponseString(true))
+				return
+			}
+			// 响应
+			log.Print("reply", reply)
 			return
-		}
-		var reply []xhttp.ExampleReplyPost
-		err = xjson.NewDecoder(httpResult.Response.Body).Decode(&reply)
-		if err != nil {
-			panic(err)
-		}
-		log.Printf("response %+v", reply)
-		// [{ID:2 Title:YEBlKOVrgg Views:22 Published:true CreatedAt:1981-05-22T03:42:31Z} {ID:3 Title:sMzheVnQeT Views:43 Published:true CreatedAt:1952-12-30T13:00:17Z}]
+		}()
+		xerr.PrintStack(err)
 	}
 }

@@ -3,6 +3,8 @@ package xhttp
 import (
 	"bytes"
 	"context"
+	xerr "github.com/goclub/error"
+	"io"
 	"io/ioutil"
 	"log"
 	"math"
@@ -189,4 +191,19 @@ func (v HttpResult) DumpRequestResponseString(body bool) (data string) {
 }
 func (v HttpResult) DumpRequestResponse(body bool) (data []byte) {
 	return DumpRequestResponse(v.Request, v.Response, body)
+}
+
+func (v HttpResult) SetBody(body []byte) {
+	v.Response.Body = io.NopCloser(bytes.NewReader(body))
+}
+func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v interface{}) error, ptr interface{}) (err error) {
+	body, err := ioutil.ReadAll(v.Response.Body)
+	if err != nil {
+		return xerr.WithStack(err)
+	}
+	err = unmarshal(body, ptr)
+	if err != nil {
+		return xerr.WithStack(err)
+	}
+	return
 }
