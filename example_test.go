@@ -14,6 +14,7 @@ func TestExample(t *testing.T) {
 	// ExampleClient_Do()
 	// ExampleClient_Send()
 }
+
 // net/http 的 &http.Client{}.Do() 函数只返回了  resp, err
 // 实际上我们一定要记得 resp.Body.Close() ,但是 resp 可能是个 nil ，此时 运行 resp.Body.Close() 会出现空指针错误
 // 并且一般情况应该判断 resp.StatusCode != 200 并返回错误
@@ -24,10 +25,12 @@ func ExampleClient_Do() {
 	ctx := context.TODO()
 	client := xhttp.NewClient(&http.Client{})
 	url := "https://mockend.com/goclub/http/posts?views_eq=20"
-	request, err := http.NewRequestWithContext(ctx, "GET", url, nil) ; if err != nil {
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
 		panic(err)
 	}
-	resp, bodyClose, statusCode, err := client.Do(request) ; if err != nil {
+	resp, bodyClose, statusCode, err := client.Do(request)
+	if err != nil {
 		panic(err)
 	}
 	defer bodyClose()
@@ -35,7 +38,8 @@ func ExampleClient_Do() {
 		panic(xerr.New("response " + resp.Status))
 	}
 	var reply []xhttp.ExampleReplyPost
-	err = xjson.NewDecoder(resp.Body).Decode(&reply) ; if err != nil {
+	err = xjson.NewDecoder(resp.Body).Decode(&reply)
+	if err != nil {
 		panic(err)
 	}
 	log.Printf("response %+v", reply)
@@ -47,23 +51,25 @@ func ExampleClient_Send() {
 		log.Print("ExampleClient_Send:query")
 		ctx := context.TODO()
 		client := xhttp.NewClient(&http.Client{})
-		req, resp, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com", "/goclub/http/posts/", xhttp.SendRequest{
-			Query:          xhttp.ExampleSendQuery{
+		httpResult, bodyClose, statusCode, err := client.Send(ctx, xhttp.GET, "https://mockend.com", "/goclub/http/posts/", xhttp.SendRequest{
+			Query: xhttp.ExampleSendQuery{
 				Published: true,
 				Limit:     2,
 			},
-		}) ; if err != nil {
-		panic(err)
-	}
+		})
+		if err != nil {
+			panic(err)
+		}
 		defer bodyClose()
 		if statusCode != 200 {
-			log.Print(xhttp.DumpRequestResponseString(req, resp, true))
+			log.Print(httpResult.DumpRequestResponseString(true))
 			return
 		}
 		var reply []xhttp.ExampleReplyPost
-		err = xjson.NewDecoder(resp.Body).Decode(&reply) ; if err != nil {
-		panic(err)
-	}
+		err = xjson.NewDecoder(httpResult.Response.Body).Decode(&reply)
+		if err != nil {
+			panic(err)
+		}
 		log.Printf("response %+v", reply)
 		// [{ID:2 Title:YEBlKOVrgg Views:22 Published:true CreatedAt:1981-05-22T03:42:31Z} {ID:3 Title:sMzheVnQeT Views:43 Published:true CreatedAt:1952-12-30T13:00:17Z}]
 	}
