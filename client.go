@@ -193,7 +193,7 @@ func (v HttpResult) DumpRequestResponse(body bool) (data []byte) {
 	return DumpRequestResponse(v.Request, v.Response, body)
 }
 
-func (v HttpResult) SetBody(body []byte) {
+func (v HttpResult) SetNopCloserBody(body []byte) {
 	v.Response.Body = io.NopCloser(bytes.NewReader(body))
 }
 func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v interface{}) error, ptr interface{}) (err error) {
@@ -201,6 +201,7 @@ func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v i
 	if err != nil {
 		return xerr.WithStack(err)
 	}
+	v.SetNopCloserBody(body)
 	err = unmarshal(body, ptr)
 	if err != nil {
 		return xerr.WithStack(err)
