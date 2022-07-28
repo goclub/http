@@ -16,6 +16,12 @@ func (group *Group) HandleFunc(route Route, handler HandleFunc) {
 	coreHandleFunc(group.serve, group.router, route, handler)
 }
 
+func (serve *Router) NetHttpHandleFunc(path string, handler func(w http.ResponseWriter, r *http.Request)) {
+	serve.router.HandleFunc(path, handler)
+}
+func (group *Group) NetHttpHandleFunc(path string, handler func(w http.ResponseWriter, r *http.Request)) {
+	group.router.HandleFunc(path, handler)
+}
 func coreHandleFunc(serve *Router, router *mux.Router, route Route, handler HandleFunc) {
 	if route.Path == "" {
 		panic(xerr.New("goclub/http: HandleFunc(route) route.Path can not be empty string"))
