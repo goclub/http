@@ -21,6 +21,10 @@ type Router struct {
 type RouterOption struct {
 	OnCatchError func(c *Context, err error) error
 	OnCatchPanic func(c *Context, recoverValue interface{}) error
+	// Configurable Handler to be used when no route matches.
+	NotFoundHandler http.Handler
+	// Configurable Handler to be used when the request method does not match the route.
+	MethodNotAllowedHandler http.Handler
 }
 
 func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +32,12 @@ func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func NewRouter(opt RouterOption) *Router {
 	r := mux.NewRouter()
+	if opt.NotFoundHandler != nil {
+		r.NotFoundHandler = opt.NotFoundHandler
+	}
+	if opt.MethodNotAllowedHandler != nil {
+		r.MethodNotAllowedHandler = opt.MethodNotAllowedHandler
+	}
 	if opt.OnCatchError == nil {
 		opt.OnCatchError = func(c *Context, err error) error {
 			log.Printf("%+v", err)
