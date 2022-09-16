@@ -176,6 +176,7 @@ func DumpRequestResponse(req *http.Request, resp *http.Response, body bool) (dat
 	}
 	data = append(data, []byte("Request:\n")...)
 	data = append(data, reqData...)
+	data = append(data, []byte("\n")...)
 	data = append(data, []byte("Response:\n")...)
 	data = append(data, respData...)
 	return
