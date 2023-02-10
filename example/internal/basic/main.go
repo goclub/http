@@ -172,8 +172,7 @@ func main() {
 	r.Use(func(c *xhttp.Context, next xhttp.Next) (err error) {
 		requestTime := time.Now()
 		log.Print("Request: ", c.Request.Method, c.Request.URL.String())
-		err = next()
-		if err != nil {
+		if err = next(); err != nil {
 			return
 		}
 		responseTime := time.Now().Sub(requestTime)

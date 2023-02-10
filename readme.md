@@ -3,15 +3,49 @@ permalink: /
 sidebarBasedOnContent: true
 ---
 
-# xhttp
+# goclub/http
 
-> 基于 Go 标准库 net/http 扩展出一些安全便捷的方法
+## 介绍
+
+goclub/http 基于 [gorilla/mux](https://github.com/gorilla/mux) 实现了接口友好并且安全便捷的`http router`和`http client`
+
+## 特性
+
+### 错误处理
+
+对错误处理支持良好,在 http 请求中发生 error/panic 时可以捕获错误并进行自定义的处理.
+
+### 路由分组和中间件
+
+支持路由分组和中间件,可满足常见的的请求日志,登录鉴权.
+
+### 请求校验
+
+配套类型安全的验证器: [goclub/validator](https://github.com/goclub/validator)
+
+## 运行 
 
 ```go
 package main
-import "github.com/goclub/http"
-func main () {
-    xhttp.
+
+import (
+	xhttp "github.com/goclub/http"
+	"net/http"
+)
+
+func main() {
+	r := xhttp.NewRouter(xhttp.RouterOption{})
+	server := &http.Server{
+		Addr:    ":2222",
+		Handler: r,
+	}
+	r.HandleFunc(xhttp.Route{xhttp.GET, "/"}, func(c *xhttp.Context) (err error) {
+		return c.WriteJSON(map[string]interface{}{"name": "goclub/http"})
+	})
+	r.LogPatterns(server)
+	if err := server.ListenAndServe(); err != nil {
+		panic(err)
+	}
 }
 ```
 
