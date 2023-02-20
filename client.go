@@ -10,6 +10,8 @@ import (
 	"math"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -208,4 +210,30 @@ func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v i
 		return xerr.WithStack(err)
 	}
 	return
+}
+
+// SignRawByValues 签名:将 url.Values 进行排序后获取未处理的签名字符串
+// signRaw := SignRawByValues(values, " secret_key", secretKey)
+// md5Byte := md5.Sum([]byte(signRaw))
+// signMD5 = strings.ToUpper(fmt.Sprintf("%x", md5Byte))
+func SignRawByValues(values url.Values, key string, value string) string {
+	var (
+		buf     strings.Builder
+		keyList []string
+	)
+	for k := range values {
+		keyList = append(keyList, k)
+	}
+	sort.Strings(keyList)
+	for _, k := range keyList {
+		v := values.Get(k)
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(v)
+		buf.WriteByte('&')
+	}
+	buf.WriteString(key)
+	buf.WriteByte('=')
+	buf.WriteString(value)
+	return buf.String()
 }
