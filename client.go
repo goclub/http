@@ -84,6 +84,11 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, s
 		httpResult.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
 	}
 	httpResult.Response, bodyClose, statusCode, err = client.Do(httpResult.Request)
+	if err != nil {
+		if bodyClose != nil {
+			_ = bodyClose()
+		}
+	}
 	if requestBodyBytes != nil {
 		httpResult.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
 	}
