@@ -42,7 +42,6 @@ func TestClient_SendRetry(t *testing.T) {
 		case 3:
 			count1 = 0
 			_, _ = writer.Write([]byte("ok")) // 测试阶段全忽略
-			writer.WriteHeader(200)
 		}
 
 	})
@@ -197,9 +196,7 @@ func TestClient_SendRetry(t *testing.T) {
 
 	}
 	{
-		httpResult, bodyClose, _, err := NewClient(nil).Send(context.TODO(), GET, "http://httpbin.org", "/headers", SendRequest{
-			Debug: true,
-		})
+		httpResult, bodyClose, _, err := NewClient(nil).Send(context.TODO(), GET, "http://httpbin.org", "/headers", SendRequest{})
 		assert.NoError(t, err)
 		defer bodyClose()
 		d, err := ioutil.ReadAll(httpResult.Response.Body)

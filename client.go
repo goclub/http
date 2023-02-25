@@ -46,6 +46,9 @@ func (client *Client) Do(request *http.Request) (resp *http.Response, bodyClose 
 	bodyClose = func() error { return nil }
 	resp, err = client.Core.Do(request)
 	if err != nil {
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		return
 	}
 	if resp != nil {
@@ -81,11 +84,11 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, s
 		httpResult.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
 	}
 	httpResult.Response, bodyClose, statusCode, err = client.Do(httpResult.Request)
-	if sendRequest.Debug {
-		log.Print(httpResult.DumpRequestResponseString(true))
-	}
 	if requestBodyBytes != nil {
 		httpResult.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
+	}
+	if sendRequest.Debug {
+		log.Print(httpResult.DumpRequestResponseString(true))
 	}
 	return
 }
@@ -212,28 +215,27 @@ func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v i
 	return
 }
 
-// SignRawByValues 签名:将 url.Values 进行排序后获取未处理的签名字符串
-// signRaw := SignRawByValues(values, " secret_key", secretKey)
-// md5Byte := md5.Sum([]byte(signRaw))
-// signMD5 = strings.ToUpper(fmt.Sprintf("%x", md5Byte))
-func SignRawByValues(values url.Values, key string, value string) string {
-	var (
-		buf     strings.Builder
-		keyList []string
-	)
-	for k := range values {
-		keyList = append(keyList, k)
+func SignValuesRaw(v url.Values) string {
+	if v == nil {
+		return ""
 	}
-	sort.Strings(keyList)
-	for _, k := range keyList {
-		v := values.Get(k)
-		buf.WriteString(k)
-		buf.WriteByte('=')
-		buf.WriteString(v)
-		buf.WriteByte('&')
+	var buf strings.Builder
+	keys := make([]string, 0, len(v))
+	for k := range v {
+		keys = append(keys, k)
 	}
-	buf.WriteString(key)
-	buf.WriteByte('=')
-	buf.WriteString(value)
+	sort.Strings(keys)
+	for _, k := range keys {
+		vs := v[k]
+		keyEscaped := k
+		for _, v := range vs {
+			if buf.Len() > 0 {
+				buf.WriteByte('&')
+			}
+			buf.WriteString(keyEscaped)
+			buf.WriteByte('=')
+			buf.WriteString(v)
+		}
+	}
 	return buf.String()
 }

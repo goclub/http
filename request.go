@@ -5,10 +5,8 @@ import (
 	"context"
 	xjson "github.com/goclub/json"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 	"time"
 )
@@ -131,13 +129,6 @@ func (request SendRequest) HttpRequest(ctx context.Context, method Method, reque
 			return
 		}
 		httpRequest.URL.RawQuery = queryValue
-	}
-	if request.Debug {
-		data, dumpErr := httputil.DumpRequest(httpRequest, true)
-		if dumpErr != nil {
-			log.Print(dumpErr)
-		}
-		log.Print("Request:", string(data))
 	}
 	return httpRequest, nil
 }

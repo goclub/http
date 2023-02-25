@@ -57,6 +57,7 @@ func ExampleClient_Send() {
 					Published: true,
 					Limit:     2,
 				},
+				JSON: map[string]interface{}{"name": "goclub"},
 			})
 			// 1. 遇到错误向上传递
 			if err != nil {
