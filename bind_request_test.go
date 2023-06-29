@@ -17,15 +17,18 @@ import (
 type URLBase64 struct {
 	Value string
 }
+
 // 实现 juice.QueryValuer
 func (b *URLBase64) MarshalRequest(value string) error {
 	valueBytes, err := base64.URLEncoding.DecodeString(value)
-	if err != nil {return err}
+	if err != nil {
+		return err
+	}
 	b.Value = string(valueBytes)
 	return nil
 }
 func TestBindRequestJSON(t *testing.T) {
-	
+
 	type UserID string
 	type School struct {
 		School string `json:"school"`
@@ -34,13 +37,13 @@ func TestBindRequestJSON(t *testing.T) {
 		Title string `json:"jobTitle"`
 	}
 	type Req struct {
-		Name string `json:"name"`
-		Age int `json:"age"`
-		Elevation int `json:"elevation"`
-		Happy bool `json:"happy"`
-		UserID UserID `json:"userID"`
+		Name      string `json:"name"`
+		Age       int    `json:"age"`
+		Elevation int    `json:"elevation"`
+		Happy     bool   `json:"happy"`
+		UserID    UserID `json:"userID"`
 		School
-		Job Job
+		Job  Job
 		Time xtime.ChinaTime `json:"time"`
 	}
 	r := httptest.NewRequest(
@@ -59,22 +62,22 @@ func TestBindRequestJSON(t *testing.T) {
 	)
 	r.Header.Set("Content-Type", "application/json")
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	
-	assert.Equal(t,Req{
-		Name: "nimoc",
-		Age: 27,
+	assert.NoError(t, BindRequest(&req, r))
+
+	assert.Equal(t, Req{
+		Name:      "nimoc",
+		Age:       27,
 		Elevation: -100,
-		Happy: true,
-		UserID: UserID("a"),
-		School: School{School: "xjtu"},
-		Job: Job{Title: "Programmer"},
-		Time: xtime.NewChinaTime(time.Date(2020,10,01,22,46,53,0, xtime.LocationChina)),
+		Happy:     true,
+		UserID:    UserID("a"),
+		School:    School{School: "xjtu"},
+		Job:       Job{Title: "Programmer"},
+		Time:      xtime.NewChinaTime(time.Date(2020, 10, 01, 22, 46, 53, 0, xtime.LocationChina)),
 	}, req)
 }
 
 func TestBindRequestQuery(t *testing.T) {
-	
+
 	type UserID string
 	type School struct {
 		School string `query:"school"`
@@ -83,13 +86,13 @@ func TestBindRequestQuery(t *testing.T) {
 		Title string `query:"jobTitle"`
 	}
 	type Req struct {
-		Name string `query:"name"`
-		Age uint `query:"age"`
-		Elevation int `query:"elevation"`
-		Happy bool `query:"happy"`
-		UserID UserID `query:"userID"`
+		Name      string `query:"name"`
+		Age       uint   `query:"age"`
+		Elevation int    `query:"elevation"`
+		Happy     bool   `query:"happy"`
+		UserID    UserID `query:"userID"`
 		School
-		Job Job
+		Job     Job
 		Website URLBase64 `query:"website"`
 	}
 	r := httptest.NewRequest(
@@ -106,20 +109,20 @@ func TestBindRequestQuery(t *testing.T) {
 		nil,
 	)
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	assert.Equal(t,Req{
-		Name: "nimoc",
-		Age: 27,
+	assert.NoError(t, BindRequest(&req, r))
+	assert.Equal(t, Req{
+		Name:      "nimoc",
+		Age:       27,
 		Elevation: -100,
-		Happy: true,
-		UserID: UserID("a"),
-		School: School{School: "xjtu"},
-		Job: Job{Title: "Programmer"},
-		Website: URLBase64{Value: "https://github.com/nimoc"},
+		Happy:     true,
+		UserID:    UserID("a"),
+		School:    School{School: "xjtu"},
+		Job:       Job{Title: "Programmer"},
+		Website:   URLBase64{Value: "https://github.com/nimoc"},
 	}, req)
 }
 func TestBindRequestWWWForm(t *testing.T) {
-	
+
 	type UserID string
 	type School struct {
 		School string `form:"school"`
@@ -128,13 +131,13 @@ func TestBindRequestWWWForm(t *testing.T) {
 		Title string `form:"jobTitle"`
 	}
 	type Req struct {
-		Name string `form:"name"`
-		Age uint `form:"age"`
-		Elevation int `form:"elevation"`
-		Happy bool `form:"happy"`
-		UserID UserID `form:"userID"`
+		Name      string `form:"name"`
+		Age       uint   `form:"age"`
+		Elevation int    `form:"elevation"`
+		Happy     bool   `form:"happy"`
+		UserID    UserID `form:"userID"`
 		School
-		Job Job
+		Job     Job
 		Website URLBase64 `form:"website"`
 	}
 
@@ -152,20 +155,20 @@ func TestBindRequestWWWForm(t *testing.T) {
 	)
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	assert.Equal(t,Req{
-		Name: "nimoc",
-		Age: 27,
+	assert.NoError(t, BindRequest(&req, r))
+	assert.Equal(t, Req{
+		Name:      "nimoc",
+		Age:       27,
 		Elevation: -100,
-		Happy: true,
-		UserID: UserID("a"),
-		School: School{School: "xjtu"},
-		Job: Job{Title: "Programmer"},
-		Website: URLBase64{Value: "https://github.com/nimoc"},
+		Happy:     true,
+		UserID:    UserID("a"),
+		School:    School{School: "xjtu"},
+		Job:       Job{Title: "Programmer"},
+		Website:   URLBase64{Value: "https://github.com/nimoc"},
 	}, req)
 }
 func TestBindRequestFormData(t *testing.T) {
-	
+
 	type UserID string
 	type School struct {
 		School string `form:"school"`
@@ -174,32 +177,41 @@ func TestBindRequestFormData(t *testing.T) {
 		Title string `form:"jobTitle"`
 	}
 	type Req struct {
-		Name string `form:"name"`
-		Age uint `form:"age"`
-		Elevation int `form:"elevation"`
-		Happy bool `form:"happy"`
-		UserID UserID `form:"userID"`
+		Name      string `form:"name"`
+		Age       uint   `form:"age"`
+		Elevation int    `form:"elevation"`
+		Happy     bool   `form:"happy"`
+		UserID    UserID `form:"userID"`
 		School
-		Job Job
+		Job     Job
 		Website URLBase64 `form:"website"`
 	}
 
 	var r *http.Request
 	{
-		values, err := url.ParseQuery("name=nimoc&"+
-			"age=27&"+
-			"elevation=-100&"+
-			"happy=true&"+
-			"userID=a&"+
-			"school=xjtu&"+
-			"jobTitle=Programmer&"+
-			"website=aHR0cHM6Ly9naXRodWIuY29tL25pbW9j") ; if err != nil {panic(err)}
+		values, err := url.ParseQuery("name=nimoc&" +
+			"age=27&" +
+			"elevation=-100&" +
+			"happy=true&" +
+			"userID=a&" +
+			"school=xjtu&" +
+			"jobTitle=Programmer&" +
+			"website=aHR0cHM6Ly9naXRodWIuY29tL25pbW9j")
+		if err != nil {
+			panic(err)
+		}
 		bufferData := bytes.NewBuffer(nil)
 		formWriter := multipart.NewWriter(bufferData)
 		for key, values := range values {
-			err := formWriter.WriteField(key, values[0]); if err != nil {panic(err)}
+			err := formWriter.WriteField(key, values[0])
+			if err != nil {
+				panic(err)
+			}
 		}
-		err = formWriter.Close() ; if err != nil {panic(err)}
+		err = formWriter.Close()
+		if err != nil {
+			panic(err)
+		}
 		r = httptest.NewRequest(
 			"POST",
 			"http://github.com/og/juice",
@@ -209,28 +221,27 @@ func TestBindRequestFormData(t *testing.T) {
 	}
 
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	assert.Equal(t,Req{
-		Name: "nimoc",
-		Age: 27,
+	assert.NoError(t, BindRequest(&req, r))
+	assert.Equal(t, Req{
+		Name:      "nimoc",
+		Age:       27,
 		Elevation: -100,
-		Happy: true,
-		UserID: UserID("a"),
-		School: School{School: "xjtu"},
-		Job: Job{Title: "Programmer"},
-		Website: URLBase64{Value: "https://github.com/nimoc"},
+		Happy:     true,
+		UserID:    UserID("a"),
+		School:    School{School: "xjtu"},
+		Job:       Job{Title: "Programmer"},
+		Website:   URLBase64{Value: "https://github.com/nimoc"},
 	}, req)
 }
 
 func TestBindRequestQueryAndWWWForm(t *testing.T) {
-	
 
 	type Req struct {
-		Name1 string `query:"name1"`
-		Age1 uint `query:"age1"`
+		Name1    string    `query:"name1"`
+		Age1     uint      `query:"age1"`
 		Website1 URLBase64 `query:"website1"`
-		Name2 string `form:"name2"`
-		Age2 uint `form:"age2"`
+		Name2    string    `form:"name2"`
+		Age2     uint      `form:"age2"`
 		Website2 URLBase64 `form:"website2"`
 	}
 
@@ -239,32 +250,31 @@ func TestBindRequestQueryAndWWWForm(t *testing.T) {
 
 		r = httptest.NewRequest(
 			"POST",
-			"http://github.com/og/juice" +
+			"http://github.com/og/juice"+
 				"?name1=nimoc1&"+
 				"age1=1&"+
 				"website1=aHR0cHM6Ly9naXRodWIuY29tL25pbW9j",
 			strings.NewReader(
 				"name2=nimoc2&"+
 					"age2=2&"+
-					"website2=Mg==",),
+					"website2=Mg=="),
 		)
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	assert.Equal(t,Req{
-		Name1: "nimoc1",
-		Age1: 1,
+	assert.NoError(t, BindRequest(&req, r))
+	assert.Equal(t, Req{
+		Name1:    "nimoc1",
+		Age1:     1,
 		Website1: URLBase64{Value: "https://github.com/nimoc"},
-		Name2: "nimoc2",
-		Age2: 2,
+		Name2:    "nimoc2",
+		Age2:     2,
 		Website2: URLBase64{Value: "2"},
 	}, req)
 }
 
-
 func TestBindRequestQueryAndJSON(t *testing.T) {
-	
+
 	type UserID string
 	type School struct {
 		School string `json:"school"`
@@ -273,15 +283,15 @@ func TestBindRequestQueryAndJSON(t *testing.T) {
 		Title string `json:"jobTitle"`
 	}
 	type Req struct {
-		Name string `json:"name"`
-		Age int `json:"age"`
-		Elevation int `json:"elevation"`
-		Happy bool `json:"happy"`
-		UserID UserID `json:"userID"`
+		Name      string `json:"name"`
+		Age       int    `json:"age"`
+		Elevation int    `json:"elevation"`
+		Happy     bool   `json:"happy"`
+		UserID    UserID `json:"userID"`
 		School
-		Job Job
+		Job  Job
 		Time xtime.ChinaTime `json:"time"`
-		Demo string `query:"demo"`
+		Demo string          `query:"demo"`
 	}
 	r := httptest.NewRequest(
 		"GET",
@@ -299,25 +309,27 @@ func TestBindRequestQueryAndJSON(t *testing.T) {
 	)
 	r.Header.Set("Content-Type", "application/json")
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	assert.Equal(t,Req{
-		Name: "nimoc",
-		Age: 27,
+	assert.NoError(t, BindRequest(&req, r))
+	assert.Equal(t, Req{
+		Name:      "nimoc",
+		Age:       27,
 		Elevation: -100,
-		Happy: true,
-		UserID: UserID("a"),
-		School: School{School: "xjtu"},
-		Job: Job{Title: "Programmer"},
-		Time: xtime.NewChinaTime(time.Date(2020,10,01,22,46,53,0, xtime.LocationChina)),
-		Demo: "a",
+		Happy:     true,
+		UserID:    UserID("a"),
+		School:    School{School: "xjtu"},
+		Job:       Job{Title: "Programmer"},
+		Time:      xtime.NewChinaTime(time.Date(2020, 10, 01, 22, 46, 53, 0, xtime.LocationChina)),
+		Demo:      "a",
 	}, req)
 }
 
-func check (err error) {
-	if err != nil {panic(err)}
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 func TestBindRequestQueryAndFormData(t *testing.T) {
-	
+
 	type UserID string
 	type School struct {
 		School string `form:"school"`
@@ -326,27 +338,28 @@ func TestBindRequestQueryAndFormData(t *testing.T) {
 		Title string `form:"jobTitle"`
 	}
 	type Req struct {
-		Name string `form:"name"`
-		Age uint `form:"age"`
-		Elevation int `form:"elevation"`
-		Happy bool `form:"happy"`
-		UserID UserID `form:"userID"`
+		Name      string `form:"name"`
+		Age       uint   `form:"age"`
+		Elevation int    `form:"elevation"`
+		Happy     bool   `form:"happy"`
+		UserID    UserID `form:"userID"`
 		School
-		Job Job
+		Job     Job
 		Website URLBase64 `form:"website"`
-		Demo string `query:"demo"`
+		Demo    string    `query:"demo"`
 	}
 
 	var r *http.Request
 	{
-		values, err := url.ParseQuery("name=nimoc&"+
-			"age=27&"+
-			"elevation=-100&"+
-			"happy=true&"+
-			"userID=a&"+
-			"school=xjtu&"+
-			"jobTitle=Programmer&"+
-			"website=aHR0cHM6Ly9naXRodWIuY29tL25pbW9j") ; check(err)
+		values, err := url.ParseQuery("name=nimoc&" +
+			"age=27&" +
+			"elevation=-100&" +
+			"happy=true&" +
+			"userID=a&" +
+			"school=xjtu&" +
+			"jobTitle=Programmer&" +
+			"website=aHR0cHM6Ly9naXRodWIuY29tL25pbW9j")
+		check(err)
 		bufferData := bytes.NewBuffer(nil)
 		formWriter := multipart.NewWriter(bufferData)
 		for key, values := range values {
@@ -362,16 +375,16 @@ func TestBindRequestQueryAndFormData(t *testing.T) {
 	}
 
 	req := Req{}
-	assert.NoError(t,BindRequest(&req, r))
-	assert.Equal(t,Req{
-		Name: "nimoc",
-		Age: 27,
+	assert.NoError(t, BindRequest(&req, r))
+	assert.Equal(t, Req{
+		Name:      "nimoc",
+		Age:       27,
 		Elevation: -100,
-		Happy: true,
-		UserID: UserID("a"),
-		School: School{School: "xjtu"},
-		Job: Job{Title: "Programmer"},
-		Website: URLBase64{Value: "https://github.com/nimoc"},
-		Demo: "1",
+		Happy:     true,
+		UserID:    UserID("a"),
+		School:    School{School: "xjtu"},
+		Job:       Job{Title: "Programmer"},
+		Website:   URLBase64{Value: "https://github.com/nimoc"},
+		Demo:      "1",
 	}, req)
 }

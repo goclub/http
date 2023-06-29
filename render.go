@@ -5,8 +5,8 @@ import (
 )
 
 type Helper struct {
-
 }
+
 func (Helper) JSON(v interface{}) []byte {
 	data, err := xjson.Marshal(v)
 	if err != nil {

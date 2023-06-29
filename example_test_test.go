@@ -13,13 +13,14 @@ import (
 )
 
 type RequestHome struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
-	Age int `json:"age"`
+	Age  int    `json:"age"`
 }
 type ReplyHome struct {
 	IDNameAge string `json:"idNameAge"`
 }
+
 func newTestRouter() *xhttp.Router {
 	router := xhttp.NewRouter(xhttp.RouterOption{
 		OnCatchError: func(c *xhttp.Context, err error) error {
@@ -34,28 +35,31 @@ func newTestRouter() *xhttp.Router {
 		},
 	})
 	router.HandleFunc(xhttp.Route{xhttp.POST, "/"}, func(c *xhttp.Context) (err error) {
-		request :=  RequestHome{}
-		err = c.BindRequest(&request) ; if err != nil {
-		    return
+		request := RequestHome{}
+		err = c.BindRequest(&request)
+		if err != nil {
+			return
 		}
 		reply := ReplyHome{}
-		reply.IDNameAge  = request.ID + ":" + request.Name + ":" + strconv.FormatInt(int64(request.Age), 10)
+		reply.IDNameAge = request.ID + ":" + request.Name + ":" + strconv.FormatInt(int64(request.Age), 10)
 		return c.WriteJSON(reply)
 	})
 	router.HandleFunc(xhttp.Route{xhttp.GET, "/count"}, func(c *xhttp.Context) (err error) {
 		cookieName := "count"
 		var count uint64
-		cookie, hasCookie, err := c.Cookie(cookieName) ; if err != nil {
-		    return
+		cookie, hasCookie, err := c.Cookie(cookieName)
+		if err != nil {
+			return
 		}
 		if hasCookie {
-			count, err = strconv.ParseUint(cookie.Value, 10, 64) ; if err != nil {
-			    return
+			count, err = strconv.ParseUint(cookie.Value, 10, 64)
+			if err != nil {
+				return
 			}
 		}
 		count++
 		c.SetCookie(&http.Cookie{
-			Name: cookieName,
+			Name:  cookieName,
 			Value: strconv.FormatUint(count, 10),
 		})
 		return c.WriteBytes([]byte(strconv.FormatUint(count, 10)))
@@ -80,7 +84,7 @@ func TestTest(t *testing.T) {
 		ID:   "1",
 		Name: "nimo",
 		Age:  18,
-	}).ExpectJSON(200, ReplyHome{IDNameAge:"1:nimo:18"})
+	}).ExpectJSON(200, ReplyHome{IDNameAge: "1:nimo:18"})
 
 	test.RequestJSON(xhttp.Route{xhttp.GET, "/count"}, nil).ExpectString(200, "1")
 
@@ -94,17 +98,21 @@ func TestTest(t *testing.T) {
 			FormData: TestFormDataReq{
 				Name: "nimo",
 			},
-		}.HttpRequest(context.TODO(), xhttp.POST, "/form") ; assert.NoError(t, err)
+		}.HttpRequest(context.TODO(), xhttp.POST, "/form")
+		assert.NoError(t, err)
 		test.Request(r).ExpectString(200, "nimo")
 	}
 
 }
+
 type TestFormDataReq struct {
 	Name string
 }
+
 func (v TestFormDataReq) FormData(formWriter *multipart.Writer) (err error) {
-	err = formWriter.WriteField("name", v.Name) ; if err != nil {
-	    return
+	err = formWriter.WriteField("name", v.Name)
+	if err != nil {
+		return
 	}
 	return
 }

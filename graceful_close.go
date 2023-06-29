@@ -12,4 +12,3 @@ func GracefulClose(closeFunc func()) {
 	<-exit
 	closeFunc()
 }
-

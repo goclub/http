@@ -1,11 +1,11 @@
 package xhttp
 
-
-
 type Method string
+
 func (m Method) String() string {
 	return string(m)
 }
+
 const GET Method = "GET"
 const POST Method = "POST"
 const HEAD Method = "HEAD"
@@ -18,9 +18,10 @@ const PATCH Method = "PATCH"
 
 type Route struct {
 	Method Method
-	Path string
+	Path   string
 }
-func (route Route) ID () string {
+
+func (route Route) ID() string {
 	return route.Method.String() + " " + route.Path
 }
 func (p Route) Equal(target Route) bool {
