@@ -12,8 +12,10 @@ import (
 	"net/http"
 	"time"
 )
+
 type traceID string
-func main () {
+
+func main() {
 	router := NewRouter()
 	// request
 	RequestBindQuery(router)
@@ -37,11 +39,12 @@ func main () {
 	addr := ":3000"
 	serve := &http.Server{
 		Handler: router,
-		Addr: addr,
+		Addr:    addr,
 	}
 	router.LogPatterns(serve)
 	go func() {
-		listenErr := serve.ListenAndServe() ; if listenErr !=nil {
+		listenErr := serve.ListenAndServe()
+		if listenErr != nil {
 			if listenErr != http.ErrServerClosed {
 				panic(listenErr)
 			}
@@ -61,8 +64,6 @@ func NewRouter() *xhttp.Router {
 	return router
 }
 
-
-
 // 打开 http://127.0.0.1:3000/request/query?name=nimoc&age=18
 func RequestBindQuery(router *xhttp.Router) {
 	route := xhttp.Route{
@@ -71,9 +72,12 @@ func RequestBindQuery(router *xhttp.Router) {
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `query:"name"`
-			Age int `query:"age"`
+			Age  int    `query:"age"`
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {return}
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
+		}
 		dump := fmt.Sprintf("%+v", req)
 		return c.WriteBytes([]byte(dump))
 	})
@@ -86,13 +90,17 @@ func RequestBindFormUrlencoded(router *xhttp.Router) {
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `form:"name"`
-			Age int `form:"age"`
+			Age  int    `form:"age"`
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {return}
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
+		}
 		dump := fmt.Sprintf("%+v", req)
 		return c.WriteBytes([]byte(dump))
 	})
 }
+
 /*
 使用 curl 发起请求
 curl --location --request POST 'http://127.0.0.1:3000/request/form_data' \
@@ -106,13 +114,17 @@ func RequestBindFormData(router *xhttp.Router) {
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `form:"name"`
-			Age int `form:"age"`
+			Age  int    `form:"age"`
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {return}
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
+		}
 		dump := fmt.Sprintf("%+v", req)
 		return c.WriteBytes([]byte(dump))
 	})
 }
+
 /*
 使用 curl 发起请求
 curl --location --request GET 'http://127.0.0.1:3000/request/json' \
@@ -129,14 +141,16 @@ func RequestBindJSON(router *xhttp.Router) {
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
 			Name string `json:"name"`
-			Age int `json:"age"`
+			Age  int    `json:"age"`
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {return}
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
+		}
 		dump := fmt.Sprintf("%+v", req)
 		return c.WriteBytes([]byte(dump))
 	})
 }
-
 
 /*
 curl --location --request GET 'http://127.0.0.1:3000/request/query_and_json?id=11' \
@@ -148,15 +162,18 @@ curl --location --request GET 'http://127.0.0.1:3000/request/query_and_json?id=1
 */
 func RequestBindQueryAndJSON(router *xhttp.Router) {
 	route := xhttp.Route{
-		xhttp.GET, "/request/query_and_json",
+		xhttp.POST, "/request/query_and_json",
 	}
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
 		req := struct {
-			ID string `query:"id"`
+			ID   string `query:"id"`
 			Name string `json:"name"`
-			Age int `json:"age"`
+			Age  int    `json:"age"`
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {return}
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
+		}
 		dump := fmt.Sprintf("%+v", req)
 		return c.WriteBytes([]byte(dump))
 	})
@@ -171,7 +188,10 @@ func RequestBindParam(router *xhttp.Router) {
 		req := struct {
 			UserID string `param:"userID"`
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {return}
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
+		}
 		dump := fmt.Sprintf("%+v", req)
 		return c.WriteBytes([]byte(dump))
 	})
@@ -192,16 +212,23 @@ func RenderFormFile(router *xhttp.Router) {
 		})
 	})
 }
+
 // 打开 http://127.0.0.1:3000/request/file 上传文件
 func RequestFile(router *xhttp.Router) {
 	route := xhttp.Route{
 		xhttp.POST, "/request/file",
 	}
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
-		file, fileHeader, err := c.Request.FormFile("file") ; if err != nil {return}
+		file, fileHeader, err := c.Request.FormFile("file")
+		if err != nil {
+			return
+		}
 		defer file.Close()
-		data, err := ioutil.ReadAll(file) ; if err != nil {return}
-		body :=  append([]byte(fileHeader.Filename + ":"), data...)
+		data, err := ioutil.ReadAll(file)
+		if err != nil {
+			return
+		}
+		body := append([]byte(fileHeader.Filename+":"), data...)
 		return c.WriteBytes(body)
 	})
 }
@@ -210,7 +237,7 @@ func RequestTraceID(router *xhttp.Router) {
 		xhttp.GET, "/request/trace_id",
 	}
 	router.HandleFunc(route, func(c *xhttp.Context) (err error) {
-		return c.WriteBytes([]byte(fmt.Sprintf("traceID: %s", c.RequestContext().Value(traceID("traceID")))))
+		return c.WriteBytes([]byte(fmt.Sprintf("traceID: %s", c.Request.Context().Value(traceID("traceID")))))
 	})
 }
 func ResponseWriteBytes(router *xhttp.Router) {
@@ -232,7 +259,9 @@ func ResponseHTML(router *xhttp.Router) {
 		})
 	})
 }
-var responseTPL =  template.Must(template.New("").Parse("name {{.Name}}"))
+
+var responseTPL = template.Must(template.New("").Parse("name {{.Name}}"))
+
 func ResponseTemplate(router *xhttp.Router) {
 	route := xhttp.Route{
 		xhttp.GET, "/response/template",
@@ -241,20 +270,21 @@ func ResponseTemplate(router *xhttp.Router) {
 		return c.Render(func(buffer *bytes.Buffer) error {
 			data := struct {
 				Name string
-			}{Name:"nimoc"}
+			}{Name: "nimoc"}
 			return responseTPL.Execute(buffer, data)
 		})
 	})
 }
 
 func GetSetCookie(router *xhttp.Router) {
-	router.HandleFunc(xhttp.Route{xhttp.GET, "/cookie"}, func (c *xhttp.Context) (err error) {
+	router.HandleFunc(xhttp.Route{xhttp.GET, "/cookie"}, func(c *xhttp.Context) (err error) {
 		query := c.Request.URL.Query()
 		switch query.Get("kind") {
 		case "get":
 			var nameCookie *http.Cookie
 			var hasValue bool
-			nameCookie, hasValue, err = c.Cookie("name") ; if err != nil {
+			nameCookie, hasValue, err = c.Cookie("name")
+			if err != nil {
 				return
 			}
 			var name string
@@ -270,7 +300,7 @@ func GetSetCookie(router *xhttp.Router) {
 				name = time.Now().String()
 			}
 			c.SetCookie(&http.Cookie{
-				Name: "name",
+				Name:  "name",
 				Value: name,
 			})
 			return c.WriteBytes([]byte("set cookie done"))

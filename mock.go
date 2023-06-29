@@ -15,27 +15,29 @@ import (
 
 type MockServer struct {
 	router *Router
-	db mockDatabase
+	db     mockDatabase
 	option MockServerOption
 }
 type mockDatabase struct {
 	sync.Mutex
-	count map[string]int64
+	count    map[string]int64
 	replyKey map[string]string
-	scene string
+	scene    string
 }
 type MockServerOption struct {
 	DefaultReply map[string]interface{}
-	Render MockRender
+	OnlineMock   string
+	Render       MockRender
 }
 type MockRender interface {
 	Render(templatePath string, data interface{}, w http.ResponseWriter) error
 }
+
 func NewMockServer(option MockServerOption) MockServer {
 	server := MockServer{
 		option: option,
 		db: mockDatabase{
-			count: map[string]int64{},
+			count:    map[string]int64{},
 			replyKey: map[string]string{},
 		},
 		router: NewRouter(RouterOption{}),
@@ -61,33 +63,36 @@ func (m MockServer) systemHandle() {
 			Action string `json:"action"`
 			xerr.Resp
 		}{}
-		err = c.BindRequest(&req) ; if err != nil {
-		    return
+		err = c.BindRequest(&req)
+		if err != nil {
+			return
 		}
 		if req.Scene != "" {
 			m.db.scene = req.Scene
-			reply.Action = `scene was successfully set to `+ req.Scene
+			reply.Action = `scene was successfully set to ` + req.Scene
 		}
 		return c.WriteJSON(reply)
 	})
 }
+
 type Mock struct {
-	Route Route `note:"路由"`
-	Request MockRequest `note:"请求"`
-	DisableDefaultReply string `note:"指定禁用默认响应的key"`
-	Reply MockReply `note:"响应"`
-	Match func(c *Context) (replyKey string) `note:"根据请求参数决定响应结果"`
-	MaxAutoCount int64 `note:"最大计数,默认5"`
-	HandleFunc func (c *Context, replyKey string, data interface{}) (err error)
-	Render string
+	Route               Route                              `note:"路由"`
+	Request             MockRequest                        `note:"请求"`
+	DisableDefaultReply string                             `note:"指定禁用默认响应的key"`
+	Reply               MockReply                          `note:"响应"`
+	Match               func(c *Context) (replyKey string) `note:"根据请求参数决定响应结果"`
+	MaxAutoCount        int64                              `note:"最大计数,默认5"`
+	HandleFunc          func(c *Context, replyKey string, data interface{}) (err error)
+	Render              string
 }
 type MockRequest map[string]interface{}
 type MockReply map[string]interface{}
+
 func (ms MockServer) URL(mock Mock) {
 	if mock.MaxAutoCount == 0 {
 		mock.MaxAutoCount = 5
 	}
-	reply:= map[string]interface{}{}
+	reply := map[string]interface{}{}
 	for replyKey, replyValue := range ms.option.DefaultReply {
 		if mock.DisableDefaultReply != "" {
 			for _, disableDefaultReply := range strings.Split(mock.DisableDefaultReply, "|") {
@@ -113,7 +118,7 @@ func (ms MockServer) URL(mock Mock) {
 			if dbCount > mock.MaxAutoCount {
 				dbCount = 1
 			}
-			ms.db.count[countKey]= dbCount
+			ms.db.count[countKey] = dbCount
 			query.Set("_count", strconv.FormatInt(dbCount, 10))
 			c.Request.URL.RawQuery = query.Encode()
 			ms.db.Unlock()
@@ -121,7 +126,7 @@ func (ms MockServer) URL(mock Mock) {
 
 		var replyKey string
 
-		replyKeyValues :=  reflect.ValueOf(reply).MapKeys()
+		replyKeyValues := reflect.ValueOf(reply).MapKeys()
 		var replyKeyStrings []string
 		for _, rValue := range replyKeyValues {
 			replyKeyStrings = append(replyKeyStrings, rValue.String())
@@ -145,7 +150,8 @@ func (ms MockServer) URL(mock Mock) {
 		response, hasResponse := reply[replyKey]
 		if hasResponse == false {
 			c.WriteStatusCode(500)
-			replyBytes, err := xjson.MarshalIndent(mock.Reply, "", "  ") ; if err != nil {
+			replyBytes, err := xjson.MarshalIndent(mock.Reply, "", "  ")
+			if err != nil {
 				replyBytes = []byte(fmt.Sprintf("%+v", mock.Reply))
 			}
 			return c.WriteBytes([]byte(fmt.Sprintf("reply:%s\ncan not found key: %s", replyBytes, replyKey)))
@@ -161,26 +167,26 @@ func (ms MockServer) URL(mock Mock) {
 	})
 }
 
-func (server MockServer) currentReplyKey(c *Context, route Route, match func(*Context) (string)) (replyKey string){
+func (server MockServer) currentReplyKey(c *Context, route Route, match func(*Context) string) (replyKey string) {
 	// database
-	dbReplyKey,hasDBReplyKey := server.db.replyKey[route.ID()]
+	dbReplyKey, hasDBReplyKey := server.db.replyKey[route.ID()]
 	if hasDBReplyKey {
-		replyKey = 	dbReplyKey
+		replyKey = dbReplyKey
 	}
 	// query
 	queryReplyKey := c.Request.URL.Query().Get("_")
 	if queryReplyKey != "" {
-		replyKey = 	queryReplyKey
+		replyKey = queryReplyKey
 	}
 	// match
-	queryScene :=  c.Request.URL.Query().Get("_scene")
+	queryScene := c.Request.URL.Query().Get("_scene")
 	if queryScene == "" {
 		c.Request.Header.Set("_scene", server.db.scene)
 	}
 	if match != nil {
 		matchReplyKey := match(c)
 		if matchReplyKey != "" {
-			replyKey = 	matchReplyKey
+			replyKey = matchReplyKey
 		}
 	}
 	return
@@ -197,7 +203,7 @@ func MockMatchSceneCount(c *Context, routers map[string]map[string]string) (repl
 	defer func() {
 		log.Printf("MockMatch: _scene(%s) _count(%s) replyKey(%s)", scene, count, replyKey)
 	}()
-	sceneData ,hasSceneData := routers[scene]
+	sceneData, hasSceneData := routers[scene]
 	if hasSceneData == false {
 		return ""
 	}
@@ -221,7 +227,7 @@ func (server MockServer) PrefixHandle(prefix string, handler http.Handler) {
 }
 func (server MockServer) Listen(port int) {
 	s := &http.Server{
-		Addr: ":" + strconv.Itoa(port),
+		Addr:    ":" + strconv.Itoa(port),
 		Handler: server.router,
 	}
 	server.router.LogPatterns(s)

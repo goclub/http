@@ -16,7 +16,7 @@ type NewsRequest struct {
 	NewsID int64 `query:"newsID"`
 }
 type NewsReply struct {
-	Title string `json:"title"`
+	Title   string `json:"title"`
 	Context string `json:"context"`
 	xerr.Resp
 }
@@ -24,32 +24,35 @@ type AuditRequest struct {
 	NewsID int64 `query:"newsID"`
 }
 type AuditStatus int8
+
 const (
-	EnumAuditStatusQueue AuditStatus = 1
-	EnumAuditStatusDone		  AuditStatus = 2
-	EnumAuditStatusReject     AuditStatus = 3
+	EnumAuditStatusQueue  AuditStatus = 1
+	EnumAuditStatusDone   AuditStatus = 2
+	EnumAuditStatusReject AuditStatus = 3
 )
+
 type AuditReply struct {
-	Status AuditStatus `json:"status"`
-	RejectReason string `json:"rejectReason"`
+	Status       AuditStatus `json:"status"`
+	RejectReason string      `json:"rejectReason"`
 	xerr.Resp
 }
 
 var view *jet.Set
 
-func init (){
+func init() {
 	loader := jet.NewOSFileSystemLoader(path.Join(os.Getenv("GOPATH"), "src/github.com/goclub/http/example/internal/mock"))
 	opts := []jet.Option{}
 	opts = append(opts, jet.InDevelopmentMode())
 	opts = append(opts, jet.WithDelims("[[", "]]"))
 	view = jet.NewSet(
 		loader,
-		opts...
+		opts...,
 	)
 	view.AddGlobalFunc("xjson", func(a jet.Arguments) reflect.Value {
 		v := a.Get(0).Interface()
 		buffer := bytes.NewBuffer(nil)
-		err := xjson.NewEncoder(buffer).Encode(v) ; if err != nil {
+		err := xjson.NewEncoder(buffer).Encode(v)
+		if err != nil {
 			return reflect.ValueOf("encode json fail")
 		}
 		return reflect.ValueOf(buffer.Bytes())
@@ -57,12 +60,12 @@ func init (){
 }
 
 type TemplateRender struct {
-
 }
 
 func (tr TemplateRender) Render(templatePath string, data interface{}, w http.ResponseWriter) (err error) {
-	t, err := view.GetTemplate(templatePath) ; if err != nil {
-	    return
+	t, err := view.GetTemplate(templatePath)
+	if err != nil {
+		return
 	}
 	return t.Execute(w, nil, data)
 }
@@ -73,7 +76,7 @@ func main() {
 			"pass": xerr.Resp{},
 			"fail": xerr.Resp{
 				Error: xerr.RespError{
-					Code: 1,
+					Code:    1,
 					Message: "错误消息",
 				},
 			},
@@ -82,7 +85,7 @@ func main() {
 	})
 	defer ms.Listen(3422)
 	ms.URL(xhttp.Mock{
-		Route:  xhttp.Route{xhttp.GET, "/news"},
+		Route: xhttp.Route{xhttp.GET, "/news"},
 		Request: xhttp.MockRequest{
 			"main": NewsRequest{
 				NewsID: 1,
@@ -90,19 +93,19 @@ func main() {
 		},
 		Reply: xhttp.MockReply{
 			"pass": NewsReply{
-				Title: "goclub/http 发布 mock 功能",
-				Context:  "全新版本,全新体验,解放前端",
+				Title:   "goclub/http 发布 mock 功能",
+				Context: "全新版本,全新体验,解放前端",
 			},
 			"fail": xerr.Resp{
 				Error: xerr.RespError{
-					Code:  1,
-					Message:  "新闻ID错误",
+					Code:    1,
+					Message: "新闻ID错误",
 				},
 			},
 		},
 	})
 	ms.URL(xhttp.Mock{
-		Route:  xhttp.Route{xhttp.GET, "/audit/status"},
+		Route: xhttp.Route{xhttp.GET, "/audit/status"},
 		Request: xhttp.MockRequest{
 			"main": AuditReply{},
 		},
@@ -111,12 +114,12 @@ func main() {
 				"": {
 					"1": "queue",
 					"2": "pass",
-					"": "pass",
+					"":  "pass",
 				},
 				"finalReject": {
 					"1": "queue",
 					"2": "reject",
-					"": "reject",
+					"":  "reject",
 				},
 			})
 		},
@@ -126,8 +129,8 @@ func main() {
 				Status: EnumAuditStatusDone,
 			},
 			"reject": AuditReply{
-				Status: EnumAuditStatusReject,
-				RejectReason:  "内容非法",
+				Status:       EnumAuditStatusReject,
+				RejectReason: "内容非法",
 			},
 			"queue": AuditReply{
 				Status: EnumAuditStatusQueue,
@@ -135,13 +138,13 @@ func main() {
 		},
 	})
 	ms.URL(xhttp.Mock{
-		Route:               xhttp.Route{xhttp.GET, "/handleFunc"},
+		Route: xhttp.Route{xhttp.GET, "/handleFunc"},
 		HandleFunc: func(c *xhttp.Context, replyKey string, data interface{}) error {
 			return c.WriteJSON("handleFunc " + replyKey)
 		},
 	})
 	ms.URL(xhttp.Mock{
-		Route:               xhttp.Route{xhttp.GET, "/render"},
+		Route: xhttp.Route{xhttp.GET, "/render"},
 		Reply: xhttp.MockReply{
 			"pass": map[string]interface{}{
 				"name": "nimo",
