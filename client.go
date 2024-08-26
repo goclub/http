@@ -10,8 +10,6 @@ import (
 	"math"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -114,6 +112,9 @@ func (client *Client) Send(ctx context.Context, method Method, origin string, pa
 	}
 	// 防止空指针错误
 	bodyClose = func() error { return nil }
+	if request.Retry.Times == math.MaxUint8 {
+		request.Retry.Times = math.MaxUint8 - 1
+	}
 	requestTimes := request.Retry.Times + 1
 	// safe count 用于避免 request.Retry.Check 写错导致的死循环，这种死循环可能在接收请求的服务器出现错误时候才能发现。
 	url := origin + path
@@ -207,6 +208,9 @@ func (v HttpResult) DumpRequestResponse(body bool) (data []byte) {
 func (v HttpResult) SetNopCloserBody(body []byte) {
 	v.Response.Body = io.NopCloser(bytes.NewReader(body))
 }
+func (v HttpResult) ReadBody(unmarshal func(data []byte, v interface{}) error, ptr interface{}) (err error) {
+	return v.ReadResponseBodyAndUnmarshal(unmarshal, ptr)
+}
 func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v interface{}) error, ptr interface{}) (err error) {
 	body, err := ioutil.ReadAll(v.Response.Body)
 	if err != nil {
@@ -218,29 +222,4 @@ func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v i
 		return xerr.WithStack(err)
 	}
 	return
-}
-
-func SignValuesRaw(v url.Values) string {
-	if v == nil {
-		return ""
-	}
-	var buf strings.Builder
-	keys := make([]string, 0, len(v))
-	for k := range v {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		vs := v[k]
-		keyEscaped := k
-		for _, v := range vs {
-			if buf.Len() > 0 {
-				buf.WriteByte('&')
-			}
-			buf.WriteString(keyEscaped)
-			buf.WriteByte('=')
-			buf.WriteString(v)
-		}
-	}
-	return buf.String()
 }
