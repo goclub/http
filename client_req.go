@@ -76,6 +76,7 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 	if httpRequest, err = http.NewRequestWithContext(ctx, method.String(), rUrl.String(), rBody); err != nil {
 		return
 	}
+	httpRequest.Header = rHeader
 	if req.Before != nil {
 		if err = req.Before(httpRequest); err != nil {
 			return
