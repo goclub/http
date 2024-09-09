@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Req struct {
@@ -25,6 +26,7 @@ type Req struct {
 	Debug              bool
 	Before             func(r *http.Request) (err error)
 	NotCheckStatusCode bool
+	Defer              func(result HttpResult, err error)
 }
 
 func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (result HttpResult, err error) {
@@ -72,8 +74,14 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 	if req.Body != nil {
 		rBody = req.Body
 	}
+	var requestBody []byte
+	if rBody != nil {
+		if requestBody, err = ioutil.ReadAll(rBody); err != nil {
+			return
+		}
+	}
 	var httpRequest *http.Request
-	if httpRequest, err = http.NewRequestWithContext(ctx, method.String(), rUrl.String(), rBody); err != nil {
+	if httpRequest, err = http.NewRequestWithContext(ctx, method.String(), rUrl.String(), bytes.NewBuffer(requestBody)); err != nil {
 		return
 	}
 	httpRequest.Header = rHeader
@@ -86,13 +94,25 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 	// debug
 	defer func() {
 		if req.Debug {
-			log.Print(result.DumpRequestResponseString(true))
+			log.Print(result.Dump())
 		}
 	}()
 	// send request
 	var resp *http.Response
-	if resp, err = c.Core.Do(httpRequest); err != nil {
+	startTime := time.Now()
+	if req.Defer != nil {
+		defer func() {
+			req.Defer(result, err)
+		}()
+	}
+	resp, err = c.Core.Do(httpRequest)
+	result.elapsed = time.Now().Sub(startTime)
+	if err != nil {
 		return
+	}
+	// 让 Request.Body 可读
+	if requestBody != nil {
+		result.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 	}
 	result.Response = resp
 	// check status
@@ -102,11 +122,5 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 			return
 		}
 	}
-	// set nop close body
-	var body []byte
-	if body, err = ioutil.ReadAll(result.Response.Body); err != nil {
-		return
-	}
-	result.SetNopCloserBody(body)
 	return
 }

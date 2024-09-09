@@ -28,6 +28,7 @@ func NewClient(core *http.Client) *Client {
 	}
 }
 
+// Deprecated: Use client.Req
 // Do
 // 消费 http.Response{}.Body 后必须 Close
 // xhttp.Client{}.Do() 的出参提供了一个安全的 bodyClose
@@ -91,11 +92,12 @@ func (client *Client) coreSend(ctx context.Context, method Method, url string, s
 		httpResult.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
 	}
 	if sendRequest.Debug {
-		log.Print(httpResult.DumpRequestResponseString(true))
+		log.Print(httpResult.Dump())
 	}
 	return
 }
 
+// Deprecated: Use client.Req
 // Send
 // 发送 query from json 等常见请求
 func (client *Client) Send(ctx context.Context, method Method, origin string, path string, request SendRequest) (httpResult HttpResult, bodyClose func() error, statusCode int, err error) {
@@ -169,6 +171,10 @@ func DumpRequestResponseString(req *http.Request, resp *http.Response, body bool
 	return string(DumpRequestResponse(req, resp, body))
 }
 func DumpRequestResponse(req *http.Request, resp *http.Response, body bool) (data []byte) {
+	if req == nil && resp == nil {
+		data = []byte(`Request is nil and Response is nil`)
+		return
+	}
 	var reqData []byte
 	if req != nil {
 		var err error
@@ -185,38 +191,55 @@ func DumpRequestResponse(req *http.Request, resp *http.Response, body bool) (dat
 			return []byte(err.Error())
 		}
 	}
-	data = append(data, []byte("Request:\n")...)
-	data = append(data, reqData...)
-	data = append(data, []byte("\n")...)
-	data = append(data, []byte("Response:\n")...)
-	data = append(data, respData...)
+	if req != nil {
+		data = append(data, []byte("Request:\r\n")...)
+		data = append(data, reqData...)
+	}
+	if resp != nil {
+		data = append(data, []byte("Response:\r\n")...)
+		data = append(data, respData...)
+	}
 	return
 }
 
 type HttpResult struct {
 	Request  *http.Request
 	Response *http.Response
+	elapsed  time.Duration
 }
 
-func (v HttpResult) DumpRequestResponseString(body bool) (data string) {
-	return string(v.DumpRequestResponse(body))
+func (v HttpResult) Elapsed() time.Duration {
+	return v.elapsed
 }
-func (v HttpResult) DumpRequestResponse(body bool) (data []byte) {
-	return DumpRequestResponse(v.Request, v.Response, body)
+func (v HttpResult) Dump(body ...bool) (dump string) {
+	return string(v.DumpBytes(body...))
+}
+func (v HttpResult) String() (dump string) {
+	return v.Dump()
+}
+func (v HttpResult) DumpBytes(body ...bool) (data []byte) {
+	b := false
+	if len(body) > 0 {
+		b = body[0]
+	} else {
+		b = true
+	}
+	return append(DumpRequestResponse(v.Request, v.Response, b), []byte("Elapsed:"+v.elapsed.String())...)
 }
 
-func (v HttpResult) SetNopCloserBody(body []byte) {
-	v.Response.Body = io.NopCloser(bytes.NewReader(body))
+func (v HttpResult) GetBody() (body []byte, err error) {
+	if body, err = ioutil.ReadAll(v.Response.Body); err != nil {
+		err = xerr.WrapPrefix("", err)
+		return
+	}
+	v.Response.Body = io.NopCloser(bytes.NewBuffer(body))
+	return
 }
 func (v HttpResult) ReadBody(unmarshal func(data []byte, v interface{}) error, ptr interface{}) (err error) {
-	return v.ReadResponseBodyAndUnmarshal(unmarshal, ptr)
-}
-func (v HttpResult) ReadResponseBodyAndUnmarshal(unmarshal func(data []byte, v interface{}) error, ptr interface{}) (err error) {
-	body, err := ioutil.ReadAll(v.Response.Body)
-	if err != nil {
-		return xerr.WithStack(err)
+	var body []byte
+	if body, err = v.GetBody(); err != nil {
+		return
 	}
-	v.SetNopCloserBody(body)
 	err = unmarshal(body, ptr)
 	if err != nil {
 		return xerr.WithStack(err)

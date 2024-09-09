@@ -68,16 +68,16 @@ func ExampleClient_Send() {
 			// 3. 检查状态码
 			if statusCode != 200 {
 				// 状态码错误时候记录日志
-				log.Print(httpResult.DumpRequestResponseString(true))
+				log.Print(httpResult.Dump(true))
 				err = xerr.New("http response statusCode != 200")
 				return
 			}
 			// json解码
 			var reply xhttp.ExampleReplyPost
-			err = httpResult.ReadResponseBodyAndUnmarshal(xjson.Unmarshal, &reply)
+			err = httpResult.ReadBody(xjson.Unmarshal, &reply)
 			if err != nil {
 				// 解码错误时记录日志
-				log.Print(httpResult.DumpRequestResponseString(true))
+				log.Print(httpResult.Dump(true))
 				return
 			}
 			// 响应
