@@ -224,9 +224,15 @@ func (v HttpResult) DumpBytes(body ...bool) (data []byte) {
 	} else {
 		b = true
 	}
-	return append(DumpRequestResponse(v.Request, v.Response, b), []byte("Elapsed:"+v.elapsed.String())...)
+	return append(DumpRequestResponse(v.Request, v.Response, b), []byte("\r\nElapsed:"+v.elapsed.String())...)
 }
-
+func (v HttpResult) GetBodyString() (body string, err error) {
+	var b []byte
+	if b, err = v.GetBody(); err != nil {
+		return
+	}
+	return string(b), err
+}
 func (v HttpResult) GetBody() (body []byte, err error) {
 	if body, err = ioutil.ReadAll(v.Response.Body); err != nil {
 		err = xerr.WrapPrefix("", err)

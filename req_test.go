@@ -7,8 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"runtime"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestClient_Req(t *testing.T) {
@@ -155,4 +158,29 @@ func TestClient_Req(t *testing.T) {
 		}()
 		assert.NoError(t, err)
 	}
+}
+
+func TestReqNumGoroutine(t *testing.T) {
+	ctx := context.TODO()
+	client := NewClient(nil)
+	log.Print("t1 ", runtime.NumGoroutine())
+	var err error
+	for i := 0; i < 10; i++ {
+		var r HttpResult
+		if r, err = client.Req(ctx, GET, "https://baidu.com/"+strconv.Itoa(i), Req{
+			NotCheckStatusCode: true,
+			JSON:               map[string]interface{}{"mockbody": 1},
+		}); err != nil {
+			panic(err)
+		}
+		_ = r
+		// log.Print(r.GetBodyString())
+		// r.Response.Body.Close()
+		log.Print("t2 ", i, runtime.NumGoroutine())
+	}
+	time.Sleep(time.Second)
+	log.Print("t3 ", runtime.NumGoroutine())
+	time.Sleep(time.Second * 3)
+	log.Print("t4 ", runtime.NumGoroutine())
+	assert.Equal(t, runtime.NumGoroutine(), 6)
 }

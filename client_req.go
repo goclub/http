@@ -106,7 +106,14 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 		}()
 	}
 	resp, err = c.Core.Do(httpRequest)
+	result.Response = resp
 	result.elapsed = time.Now().Sub(startTime)
+	var b []byte
+	if b, err = result.GetBody(); err != nil {
+		return
+	}
+	resp.Body.Close()
+	result.Response.Body = io.NopCloser(bytes.NewBuffer(b))
 	if err != nil {
 		return
 	}
@@ -114,7 +121,6 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 	if requestBody != nil {
 		result.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 	}
-	result.Response = resp
 	// check status
 	if req.NotCheckStatusCode == false {
 		if resp.StatusCode != 200 {
