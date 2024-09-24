@@ -108,12 +108,14 @@ func (c *Client) Req(ctx context.Context, method Method, u string, req Req) (res
 	resp, err = c.Core.Do(httpRequest)
 	result.Response = resp
 	result.elapsed = time.Now().Sub(startTime)
-	var b []byte
-	if b, err = result.GetBody(); err != nil {
-		return
+	if err == nil {
+		var b []byte
+		if b, err = result.GetBody(); err != nil {
+			return
+		}
+		resp.Body.Close()
+		result.Response.Body = io.NopCloser(bytes.NewBuffer(b))
 	}
-	resp.Body.Close()
-	result.Response.Body = io.NopCloser(bytes.NewBuffer(b))
 	if err != nil {
 		return
 	}

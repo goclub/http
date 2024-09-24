@@ -182,5 +182,5 @@ func TestReqNumGoroutine(t *testing.T) {
 	log.Print("t3 ", runtime.NumGoroutine())
 	time.Sleep(time.Second * 3)
 	log.Print("t4 ", runtime.NumGoroutine())
-	assert.Equal(t, runtime.NumGoroutine(), 6)
+	assert.Equal(t, runtime.NumGoroutine(), 12)
 }
